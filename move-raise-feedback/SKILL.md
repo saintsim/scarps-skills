@@ -1,30 +1,30 @@
 ---
 name: move-raise-feedback
-description: MoveIt ecosystem — raise the current client's backend feedback and deliver it to the shipworthy-api backend. Run from a client repo (iOS MoveIt, or the standalone web-desk app). Reviews the client's integration with the backend, writes a dated feedback doc in the client's own feedback dir (updating its scoreboard), copies it into the backend's inbox on a new branch in the shipworthy-api checkout, and opens a DRAFT PR there. Never merges — human stays in the loop.
+description: MoveIt ecosystem — raise the current client's backend feedback and deliver it to the MoveIt-API backend. Run from a client repo (iOS MoveIt, or the standalone web-desk app). Reviews the client's integration with the backend, writes a dated feedback doc in the client's own feedback dir (updating its scoreboard), copies it into the backend's inbox on a new branch in the MoveIt-API checkout, and opens a DRAFT PR there. Never merges — human stays in the loop.
 user-invocable: true
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
-You raise the **current client's feedback about the backend** and deliver it to the `shipworthy-api` backend, following the established "scoreboard + dated correspondence" convention. This is operation #1 of the MoveIt cross-repo feedback flow.
+You raise the **current client's feedback about the backend** and deliver it to the `MoveIt-API` backend, following the established "scoreboard + dated correspondence" convention. This is operation #1 of the MoveIt cross-repo feedback flow.
 
-Assumes the **clean 3-repo layout**: backend `shipworthy-api`, iOS client `MoveIt`, and the **standalone web-desk** client repo. Run this **from a client repo**.
+Assumes the **clean 3-repo layout**: backend `MoveIt-API`, iOS client `MoveIt`, and the **standalone web-desk** client repo. Run this **from a client repo**.
 
 ## Repo map & conventions (shared across the move-*-feedback skills)
 
 **Which client am I in?** Detect from the current git repo:
 - **`ios`** — origin remote is `saintsim/MoveIt`, or an `*.xcodeproj`/`Package.swift` is present, or `docs/backend-feedback/` exists.
 - **`web-desk`** — the standalone web app (Next.js / `package.json`), origin remote is the web repo, or a `client-feedback/`/`docs/backend-feedback/` dir exists.
-- If it looks like the **backend** (`saintsim/shipworthy-api`, Supabase migrations, `docs/client-feedback/`), stop — this skill runs from a client, not the backend.
+- If it looks like the **backend** (`saintsim/MoveIt-API`, Supabase migrations, `docs/client-feedback/`), stop — this skill runs from a client, not the backend.
 - If ambiguous, ask the user which client this is.
 
 **Client's own outgoing feedback dir** (its record + scoreboard):
 - iOS: `docs/backend-feedback/` (with a `README.md` scoreboard).
 - web-desk: an existing feedback dir if present, else `docs/backend-feedback/` (mirror iOS, incl. a README scoreboard).
 
-**Backend repo (`shipworthy-api`) resolution**, in order:
-1. `$SHIPWORTHY_API_DIR` if set.
-2. A sibling checkout: `../shipworthy-api`, else `~/Documents/Programming/shipworthy-api`.
-3. Search `~/Documents/Programming` for a git repo whose `origin` is `saintsim/shipworthy-api`.
+**Backend repo (`MoveIt-API`) resolution**, in order:
+1. `$MOVEIT_API_DIR` if set.
+2. A sibling checkout: `../MoveIt-API`, else `~/Documents/Programming/MoveIt-API`.
+3. Search `~/Documents/Programming` for a git repo whose `origin` is `saintsim/MoveIt-API` (or `saintsim/shipworthy-api`, the pre-2026-08-04 name GitHub still redirects).
 4. If not found, **ask the user** for the path — don't guess.
 
 **Backend inbox** (where client feedback lands): `<backend>/docs/client-feedback/`.
@@ -51,9 +51,9 @@ In the **backend repo** (use `git -C <backend>`):
    ```
    Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
    ```
-4. Push `-u`, then open a **draft** PR in `shipworthy-api`:
+4. Push `-u`, then open a **draft** PR in `MoveIt-API`:
    ```sh
-   gh pr create --draft --base <default> --title "<title>" --body "<body>" --repo saintsim/shipworthy-api
+   gh pr create --draft --base <default> --title "<title>" --body "<body>" --repo saintsim/MoveIt-API
    ```
    Body (British English): **Summary** (which client, what it needs), **Asks** (the ranked list), **Source** (link to the client's copy). End the body with:
    ```

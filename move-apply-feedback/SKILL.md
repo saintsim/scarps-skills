@@ -1,6 +1,6 @@
 ---
 name: move-apply-feedback
-description: MoveIt ecosystem — pull the backend's latest reply to this client and act on it. Run from a client repo (iOS MoveIt, or the standalone web-desk app). Finds the newest backend-response file for this client in the shipworthy-api checkout, copies it into the client repo as a record, reads it, implements the code changes it now enables/requests, updates the client's scoreboard, and drafts a reply back to the backend. Leaves shipping the code changes to /ship.
+description: MoveIt ecosystem — pull the backend's latest reply to this client and act on it. Run from a client repo (iOS MoveIt, or the standalone web-desk app). Finds the newest backend-response file for this client in the MoveIt-API checkout, copies it into the client repo as a record, reads it, implements the code changes it now enables/requests, updates the client's scoreboard, and drafts a reply back to the backend. Leaves shipping the code changes to /ship.
 user-invocable: true
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---
@@ -12,7 +12,7 @@ You pull the **backend's reply to this client** and act on it. This is operation
 Same as `move-raise-feedback`:
 - **Client id** (`ios` | `web-desk`) detected from the current repo; ask if ambiguous. Stop if this is the backend repo.
 - **Client feedback dir**: iOS `docs/backend-feedback/` (+ README scoreboard); web an existing feedback dir else `docs/backend-feedback/`.
-- **Backend repo (`shipworthy-api`)**: `$SHIPWORTHY_API_DIR` → sibling/`~/Documents/Programming/shipworthy-api` → search for origin `saintsim/shipworthy-api` → ask.
+- **Backend repo (`MoveIt-API`)**: `$MOVEIT_API_DIR` → sibling/`~/Documents/Programming/MoveIt-API` → search for origin `saintsim/MoveIt-API` (or the redirected old `saintsim/shipworthy-api`) → ask.
 - **Backend replies** to read: `<backend>/docs/client-feedback/<YYYY-MM-DD>-backend-response-<client>.md`.
 
 ## Steps
