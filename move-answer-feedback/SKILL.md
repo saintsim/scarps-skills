@@ -1,17 +1,17 @@
 ---
 name: move-answer-feedback
-description: MoveIt ecosystem — from the shipworthy-api backend, address the clients' inbound feedback and prepare replies. Run from the shipworthy-api repo. Reads the newest un-answered client feedback (iOS and/or web-desk), implements the backend changes to address the asks, and writes a dated backend-response file per client with a delivered/answered/deferred/declined status table mirroring the client's ask numbers. Leaves shipping to /ship.
+description: MoveIt ecosystem — from the MoveIt-API backend, address the clients' inbound feedback and prepare replies. Run from the MoveIt-API repo. Reads the newest un-answered client feedback (iOS and/or web-desk), implements the backend changes to address the asks, and writes a dated backend-response file per client with a delivered/answered/deferred/declined status table mirroring the client's ask numbers. Leaves shipping to /ship.
 user-invocable: true
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
-You are the **backend** (`shipworthy-api`) responding to the clients' feedback: make the backend changes and prepare the replies. This is operation #3 of the MoveIt cross-repo feedback flow. Run this **from the `shipworthy-api` repo**.
+You are the **backend** (`MoveIt-API`) responding to the clients' feedback: make the backend changes and prepare the replies. This is operation #3 of the MoveIt cross-repo feedback flow. Run this **from the `MoveIt-API` repo**.
 
 ## Conventions
 
 - Inbound client feedback lands in **`docs/client-feedback/`** as `<YYYY-MM-DD>-<client>-<slug>.md` (client = `ios` | `web-desk`), delivered by clients via `/move-raise-feedback`.
 - Backend replies you write go in the **same dir** as `<YYYY-MM-DD>-backend-response-<client>.md`. Clients read these via `/move-apply-feedback`.
-- Confirm you're actually in the backend: origin `saintsim/shipworthy-api`, Supabase migrations, `docs/client-feedback/` present. If this looks like a client repo, stop and point the user at the right skill.
+- Confirm you're actually in the backend: origin `saintsim/MoveIt-API` (or the redirected old `saintsim/shipworthy-api`), Supabase migrations, `docs/client-feedback/` present. If this looks like a client repo, stop and point the user at the right skill.
 
 ## Steps
 
