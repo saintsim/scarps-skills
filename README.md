@@ -35,7 +35,15 @@ backend checkout is resolved via `$MOVEIT_API_DIR`, a sibling checkout, or by re
 
 ## Install
 
-### First time on a new machine
+There are two places these skills need to be installed, because local Claude Code and
+cloud sessions load skills from different sources.
+
+| Where you work | Install route | Picks up `git pull` automatically |
+| --- | --- | --- |
+| Local Claude Code (terminal, desktop) | `./install.sh` — symlinks into `~/.claude/skills/` | Yes |
+| Cloud sessions (Claude Code on the web, Claude mobile app, `claude --cloud`) | `./package.sh`, then upload the ZIPs to claude.ai | No — re-upload after edits |
+
+### Local machines
 
 ```sh
 git clone https://github.com/saintsim/scarps-skills.git
@@ -43,11 +51,44 @@ cd scarps-skills
 ./install.sh
 ```
 
-### After that
-
-Once installed, just run **`/setup`** from any project to (re)install everything —
-handy after pulling new skills. Or re-run `./install.sh` directly.
+After that, just run **`/setup`** from any project to (re)install everything — handy
+after pulling new skills. Or re-run `./install.sh` directly.
 
 Both symlink every skill directory in this repo into `~/.claude/skills/`, refreshing
 existing symlinks and leaving any real (non-symlink) entries untouched — they warn
-instead of clobbering them.
+instead of clobbering them. Because they're symlinks, a `git pull` updates every
+installed skill with no reinstall.
+
+### Cloud sessions
+
+Cloud sessions run on a fresh VM that clones only the repo you're working in, so
+`~/.claude/skills/` from your laptop never reaches them. What *does* reach them is
+[skills you upload and enable on claude.ai](https://code.claude.com/docs/en/cloud-environments#what-carries-over-from-your-setup)
+— those load automatically in every cloud session, in every repo, on every surface
+(web, the Claude mobile app, the desktop app, `claude --cloud`).
+
+Build one ZIP per skill:
+
+```sh
+./package.sh
+```
+
+This writes `dist/<skill>.zip` for each skill, each containing a single top-level
+directory with its `SKILL.md` — the layout claude.ai expects. Then upload each ZIP at
+**claude.ai → Settings → Features → Skills** and toggle it on. Requires code execution
+enabled; custom skills are per-user and can't be managed org-wide.
+
+`dist/` is gitignored — the ZIPs are build output, not source.
+
+> **Re-upload after changes.** Unlike the local symlinks, an uploaded ZIP is a snapshot.
+> Edit a `SKILL.md` and push, and cloud sessions keep running the old copy until you
+> re-run `./package.sh` and upload again.
+
+Two routes that look like alternatives but aren't worth using here:
+
+- **Cloud environment setup scripts** run once and are then filesystem-cached for
+  roughly seven days, so a `git clone` in one serves a stale copy of these skills long
+  after you've pushed changes.
+- **Committing `.claude/skills/` into a project** works and stays fresh, but only for
+  that one repo — which defeats the purpose for the `move-*-feedback` skills, since
+  they're meant to run from `shipworthy-api`, `MoveIt`, and `web-desk` alike.
