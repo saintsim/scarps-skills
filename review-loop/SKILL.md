@@ -54,6 +54,14 @@ Review dimensions (make these explicit in the reviewer's prompt):
 - **Missing tests** — new public methods, ViewModels, models, or bug fixes with no test coverage. Where tests were added, spot-check they can actually fail (would a plausible mutation of the code under test break them?).
 - **UI polish (optional)** — if the change is UI, Fable may suggest polish to make it look more professional; apply it if it's clearly an improvement and in scope.
 
+### Each round — show the user the findings in full
+
+When the reviewer's report arrives — round 1 and every re-review — **relay the findings to the user in full before you start fixing**. The loop runs unattended, so this text is the user's only window into what Fable actually said:
+
+- State the verdict, then list **every** finding with its number, `file:line`, severity, category, and the reviewer's actual description — quote or faithfully reproduce it. A one-line executive summary may precede the list but **never replaces it**; "9 findings (2 high)" on its own is not a report.
+- On re-review rounds, also list per prior finding whether the reviewer confirmed it resolved, any new findings in full, and the reviewer's answer to "is your feedback the same or has it changed?".
+- Include the reviewer's optional/polish suggestions and note which you're applying.
+
 ### Each round — fix everything
 
 For **every** finding Fable returns:
