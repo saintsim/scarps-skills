@@ -212,7 +212,8 @@ that actually ships.
 
 ## 8. On the go-ahead — review, ship, then the roadmap
 
-1. **`/review-loop`** — invoke it and let it run to a clean verdict; don't shortcut the loop.
+1. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
+   shortcut the loop.
 2. **`/ship`** — it re-lints, updates docs, commits, pushes and opens the **draft** code PR. Title
    prefixed with project and item, e.g. `<Project>: RM-25 — <what it does>`. **Capture the PR URL** —
    the roadmap PR must link it.
@@ -246,7 +247,7 @@ git -C <open-road> worktree remove <scratch-dir>/rm-<id>-roadmap
 
 Leave it — and say where it is — if anything is uncommitted or the push failed. **Never remove a
 worktree you did not create.** If `worktree add` fails, do **not** fall back to `switch` in the shared
-checkout: pick a fresh branch name and retry, then stop and tell the user.
+checkout: pick a fresh branch name and retry once; if that also fails, stop and tell the user.
 
 **Re-read the item and project README as they stand in the worktree before editing.** It is cut from a
 fetch made now, possibly hours after §2 — another session's roadmap PR may have merged in between.
