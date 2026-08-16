@@ -10,6 +10,7 @@ every project picks the skills up automatically.
 
 | Skill | Invoke | What it does |
 | --- | --- | --- |
+| [`roadmap-item`](roadmap-item/SKILL.md) | `work on RM-25` / `/roadmap-item RM-25` | Picks up an **Open-Road** roadmap item by bare id and builds it in whichever code repo you're standing in — resolving the project from that repo's `.roadmap` pointer (or, for a companion repo that has none, by matching its remote against each item's `repos:`), because ids are per project and the same `RM-25` can exist in more than one. Reads the item and its authorities, asks up front only if the item is too thin to build from, branches `rm-<id>-<slug>` off the freshly fetched default branch, implements, then **builds and runs the unit tests** before stopping for you to test (UI tests are compiled but not run — too slow — unless your diff touched one). On your go-ahead: `/review-loop` → `/ship` → a paired **draft** Open-Road PR marking the item done, with evidence, the README row flipped and one item promoted to `next`. Say "don't wait for me to test" to run straight through. |
 | [`review-loop`](review-loop/SKILL.md) | `/review-loop [scope]` | Loops an **independent Fable sub-agent** code review + fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same Fable sub-agent re-reviews; repeat until clean. Findings too big to fix now are recorded in `docs/deferred-review-items.md` — never silently ignored. Runs unattended. |
 | [`plan-review`](plan-review/SKILL.md) | `/plan-review [scope]` | The plans counterpart of `review-loop`, for **intent-only repos** (e.g. Open-Road). Same independent Fable loop, but reviewing markdown plans against the repo's schema and conventions: frontmatter validity, repo invariants, dangling references, spec/item consistency, ambiguity an implementer would diverge on, sequencing, and evidence discipline. Owner-only fixes (intent, ordering, renumbering) are recorded, never made. Runs unattended. |
 | [`ship`](ship/SKILL.md) | `/ship` | Ships the current changes on **GitHub** (assumes review is done). Re-lints if a linter exists, ensures repo docs are up to date, branches off the default branch, commits, pushes, and opens a **draft** PR with a title + description. Never marks ready-for-review and never merges — human stays in the loop. |
@@ -17,6 +18,27 @@ every project picks the skills up automatically.
 | [`move-apply-feedback`](move-apply-feedback/SKILL.md) | `/move-apply-feedback` | **MoveIt** — from a client repo, pulls the backend's latest reply, implements the changes it enables, updates the scoreboard, drafts a reply back. |
 | [`move-answer-feedback`](move-answer-feedback/SKILL.md) | `/move-answer-feedback` | **MoveIt** — from `MoveIt-API`, addresses the clients' inbound feedback and writes dated `backend-response-<client>` replies with a status table. |
 | [`setup`](setup/SKILL.md) | `/setup` | Installs every skill in this repo onto the current machine by symlinking each skill directory into `~/.claude/skills/`. Idempotent — safe to re-run after pulling new skills. |
+
+### Open-Road roadmap loop
+
+[Open-Road](https://github.com/saintsim/Open-Road) holds **intent, not code** — one folder
+per project, with the build spec and the roadmap items. The roadmap always lives there; the
+code lives in each project's own repo, which points back with a `.roadmap` file.
+`roadmap-item` is the bridge: stand in the code repo, name the id, and it does the rest.
+A companion repo with no pointer of its own still resolves, by matching its remote against
+the `repos:` each item already names — and if it's still ambiguous, the skill asks.
+
+```
+<code repo>/  work on RM-25  → resolve project (.roadmap, else repos:) → read item + conventions
+                             → branch rm-25-<slug> → implement → build + test → STOP, you test
+              (go-ahead)     → /review-loop → /ship (draft code PR)
+                             → Open-Road draft PR: intent done, evidence, README row, next item
+```
+
+Ids are **per project**, not global — two projects can each carry an `RM-25`, and they're
+unrelated items — so the project is always resolved from the repo you're in, never by
+searching Open-Road for the filename. The code PR merges first; both are opened as drafts
+together so you can merge the pair in one sitting.
 
 ### MoveIt feedback loop
 
