@@ -70,6 +70,29 @@ That `path` **is** the project resolution. Locate the Open-Road checkout, in thi
 2. A sibling checkout of the current repo's parent directory whose name matches the `repo` field.
 3. Anything else on disk you can find with a bounded search.
 
+### When the repo has no `.roadmap`
+
+Not every code repo carries the pointer. A companion repo — a website, a service, a second client —
+often delivers items from a project whose *other* repo has one, and it is the companion that gets
+forgotten. Don't stop here: the link is recoverable, because **every item already names the repos it
+lands in**. Locate the roadmap checkout as above (it is always Open-Road), then match on this repo's
+remote:
+
+```sh
+git remote get-url origin                                        # …/<owner>/<repo>.git
+grep -l "^repos:.*<owner>/<repo>" <open-road>/*/roadmap/*.md     # items whose repos: names this repo
+```
+
+**Anchor the match to the `repos:` line.** An unanchored search hits the slug wherever it appears in
+an item's prose — items cite each other's repos in tables and examples — and will resolve to a project
+the repo has nothing to do with. Confirm too that the hit is a whole element of the list rather than
+the prefix of a longer name.
+
+If every match sits under one project folder, that project is the answer. Say you resolved it this
+way rather than from a pointer, and **tell the user that adding a `.roadmap` to this repo would make
+it direct** — for this skill and for anything else that discovers roadmaps by pointer. If the matches
+span more than one project, or nothing matches at all, ask.
+
 Then bring it up to date and check its state — you are about to read intent from it and later write to
 it, and a stale or dirty checkout poisons both:
 
@@ -83,7 +106,7 @@ you read the item from. Do not stash, reset or discard the user's work there.
 
 **Stop and ask** if any of these hold — do not guess your way past them:
 
-- there is no `.roadmap` in this repo;
+- there is no `.roadmap` **and** the remote match above resolves to no project, or to more than one;
 - `.roadmap` is missing its `repo:` or `path:` key, or `path` names a directory that does not exist in
   the roadmap checkout;
 - no Open-Road checkout can be found;
@@ -92,6 +115,11 @@ you read the item from. Do not stash, reset or discard the user's work there.
 
 **If the user names no id at all** ("start the next item"), resolve the item whose `intent` is `next`,
 say which one you resolved and carry on. If none or more than one is `next`, ask which they mean.
+
+**And if it is still not clear after all of that — ask.** Say what you tried, what you found, and what
+you think the answer probably is, then let the user confirm. Resolution is the one step where a wrong
+guess is silent: you build the right item in the wrong repo, or the wrong project's item entirely, and
+nothing downstream catches it. A question here costs a sentence; a wrong resolution costs the build.
 
 ## 2. Read before you build
 
