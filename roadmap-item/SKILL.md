@@ -36,8 +36,8 @@ Two **planned** stops:
 
 Beyond those, stop only when the run **cannot safely continue** — an unresolvable item, a code repo
 the item doesn't name, a dirty working tree, a dependency that isn't done, or reality contradicting
-the item mid-build. Each is called out where it arises. Otherwise run unattended: don't ask permission to read, branch, implement,
-or fix your own build breaks.
+the item mid-build. Each is called out where it arises. Otherwise run unattended: don't ask permission
+to read, branch, implement, or fix your own build breaks.
 
 If the user's opening message waives the second gate — "don't wait for me to test", "go all the way
 through", "don't stop", or anything equivalent — **skip Gate 2** and run straight on to review, ship
@@ -70,17 +70,36 @@ That `path` **is** the project resolution. Locate the Open-Road checkout, in thi
 2. A sibling checkout of the current repo's parent directory whose name matches the `repo` field.
 3. Anything else on disk you can find with a bounded search.
 
+### Everything you read from the roadmap repo comes from its remote
+
+**Treat the roadmap checkout as shared and possibly occupied.** Another session may be working in it
+right now — mid-edit, on its own branch, or in its own worktree. Its working tree is therefore not a
+reliable statement of intent, and it is not yours to disturb.
+
+So fetch it, find its default branch, and read **everything** from that remote ref — items, specs,
+READMEs, the conventions, and the resolution search below. Never from the files on disk:
+
+```sh
+git -C <open-road> fetch --quiet origin
+git -C <open-road> remote show origin | sed -n 's/.*HEAD branch: //p'     # <default-branch>
+git -C <open-road> show origin/<default-branch>:<path>/RM-NN.md
+```
+
+That is the same content whatever branch the checkout happens to be sitting on, so a stale or
+half-edited working tree cannot feed you the wrong requirement.
+
 ### When the repo has no `.roadmap`
 
 Not every code repo carries the pointer. A companion repo — a website, a service, a second client —
 often delivers items from a project whose *other* repo has one, and it is the companion that gets
 forgotten. Don't stop here: the link is recoverable, because **every item already names the repos it
 lands in**. Locate the roadmap checkout as above (it is always Open-Road), then match on this repo's
-remote:
+remote — searching the remote ref, for the same reason everything else is read from it:
 
 ```sh
 git remote get-url origin                                        # …/<owner>/<repo>.git
-grep -l "^repos:.*<owner>/<repo>" <open-road>/*/roadmap/*.md     # items whose repos: names this repo
+git -C <open-road> grep -l "^repos:.*<owner>/<repo>" \
+    origin/<default-branch> -- '*/roadmap/*.md'                  # items whose repos: names this repo
 ```
 
 **Anchor the match to the `repos:` line.** An unanchored search hits the slug wherever it appears in
@@ -93,24 +112,9 @@ way rather than from a pointer, and **tell the user that adding a `.roadmap` to 
 it direct** — for this skill and for anything else that discovers roadmaps by pointer. If the matches
 span more than one project, or nothing matches at all, ask.
 
-### Read the item from the remote, not the working tree
+### The shared checkout is not yours to disturb
 
-**Treat the roadmap checkout as shared and possibly occupied.** Another session may be working in it
-right now — mid-edit, on its own branch, or in its own worktree. Its working tree is therefore not a
-reliable statement of intent, and it is not yours to disturb.
-
-Fetch, then read the item from the fetched remote branch rather than from the files on disk:
-
-```sh
-git -C <open-road> fetch --quiet origin
-git -C <open-road> remote show origin | sed -n 's/.*HEAD branch: //p'     # its default branch
-git -C <open-road> show origin/<default-branch>:<path>/RM-NN.md
-```
-
-That is the same content whatever branch the checkout happens to be sitting on, so a stale or
-half-edited working tree cannot feed you the wrong requirement.
-
-Then look at the working tree only to *report* on it, never to depend on it:
+Look at its working tree only to *report* on it, never to depend on it:
 
 ```sh
 git -C <open-road> status --short --branch
@@ -144,9 +148,14 @@ nothing downstream catches it. A question here costs a sentence; a wrong resolut
 
 ## 2. Read before you build
 
-In this order, and actually read them — this setup punishes skimming:
+In this order, and actually read them — this setup punishes skimming.
 
-1. **The item** — `<open-road>/<path>/RM-NN.md`. Items record decisions already taken and the evidence
+**Every roadmap-repo read below comes from `origin/<default-branch>`**, per section 1 — the item, its
+dependencies, the spec, the READMEs and the conventions alike. Where a path is written as
+`<open-road>/…` it means `git show origin/<default-branch>:…`, not the file on disk. Only the code
+repo you are standing in is read from its working tree, because that one is yours.
+
+1. **The item** — `<path>/RM-NN.md`. Items record decisions already taken and the evidence
    for them, so they don't have to be re-derived. Some ask for a **measurement to be re-run before
    building**. Do that first and keep the result — it goes back into the item at the end.
 2. **`repos:` in the item's frontmatter** — the code repos the work lands in. Compare it with the repo
@@ -349,6 +358,11 @@ tell the user.
 Putting the project in the slug is for human readability: numeric matching ignores the slug, so a bare
 `rm-25-roadmap` still resolves, but a reader scanning branches in a repo holding several projects
 cannot tell which `RM-25` it means.
+
+**Re-read the item and the project README as they stand in the worktree before editing them.** The
+worktree is cut from a fetch made now, which may be hours after you read them in section 2 — another
+session's roadmap PR may have merged in between, moving the item, the table or the current `next`.
+Edit what is there, not what you remember.
 
 Make these edits **together**:
 
