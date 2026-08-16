@@ -93,16 +93,37 @@ way rather than from a pointer, and **tell the user that adding a `.roadmap` to 
 it direct** — for this skill and for anything else that discovers roadmaps by pointer. If the matches
 span more than one project, or nothing matches at all, ask.
 
-Then bring it up to date and check its state — you are about to read intent from it and later write to
-it, and a stale or dirty checkout poisons both:
+### Read the item from the remote, not the working tree
+
+**Treat the roadmap checkout as shared and possibly occupied.** Another session may be working in it
+right now — mid-edit, on its own branch, or in its own worktree. Its working tree is therefore not a
+reliable statement of intent, and it is not yours to disturb.
+
+Fetch, then read the item from the fetched remote branch rather than from the files on disk:
 
 ```sh
 git -C <open-road> fetch --quiet origin
-git -C <open-road> status --short --branch
+git -C <open-road> remote show origin | sed -n 's/.*HEAD branch: //p'     # its default branch
+git -C <open-road> show origin/<default-branch>:<path>/RM-NN.md
 ```
 
-If the checkout is dirty or behind its upstream, say so plainly before continuing, and say which state
-you read the item from. Do not stash, reset or discard the user's work there.
+That is the same content whatever branch the checkout happens to be sitting on, so a stale or
+half-edited working tree cannot feed you the wrong requirement.
+
+Then look at the working tree only to *report* on it, never to depend on it:
+
+```sh
+git -C <open-road> status --short --branch
+git -C <open-road> worktree list
+```
+
+If it is dirty, on another branch, or carries worktrees, **say so, and say you read the item from
+`origin/<default-branch>` instead**. If its uncommitted changes touch this item or its project README,
+that is in-flight intent you may be about to contradict — surface it and ask before building.
+
+**Never `switch`, `checkout`, `stash`, `pull`, `reset` or discard anything in the shared checkout.**
+Another session's uncommitted work is unrecoverable if you move its HEAD. Everything you write goes in
+your own worktree — see section 9.
 
 **Stop and ask** if any of these hold — do not guess your way past them:
 
@@ -295,11 +316,35 @@ The **code PR merges first** — the roadmap must never claim work that isn't sh
 **opened together as drafts in this session**, so the owner can merge the pair in sequence without
 being prompted for the second half.
 
-In the Open-Road checkout, on a **new branch off its freshly fetched default branch**:
+### Work in your own worktree, never in the shared checkout
+
+**Do the roadmap edits in a dedicated worktree.** The checkout may be occupied by another session, and
+`switch`ing it would move that session's HEAD mid-edit and can lose its uncommitted work. A worktree
+gives you a private directory on a fresh branch while leaving the shared checkout untouched:
 
 ```sh
-git -C <open-road> switch -c rm-<id>-<project>-roadmap origin/<default-branch>
+git -C <open-road> fetch --quiet origin
+git -C <open-road> worktree add <scratch-dir>/rm-<id>-roadmap \
+    -b rm-<id>-<project>-roadmap origin/<default-branch>
 ```
+
+Put `<scratch-dir>` outside the repository — your session's scratch directory if you have one, a temp
+directory otherwise. **Make every edit, commit and push from the worktree path**, not from
+`<open-road>`.
+
+When the PR is open and the branch pushed, clean up:
+
+```sh
+git -C <open-road> worktree remove <scratch-dir>/rm-<id>-roadmap
+```
+
+Leave it in place — and say where it is — if anything is uncommitted or the push failed, rather than
+removing work that hasn't landed anywhere. `git worktree list` shows what exists; never remove one you
+did not create.
+
+If `worktree add` fails — the branch name already exists, or the git is too old — do **not** fall back
+to `switch` in the shared checkout. Pick a fresh branch name and retry, and if that fails, stop and
+tell the user.
 
 Putting the project in the slug is for human readability: numeric matching ignores the slug, so a bare
 `rm-25-roadmap` still resolves, but a reader scanning branches in a repo holding several projects
@@ -340,10 +385,16 @@ promotion is a standing instruction from the owner, written down where a one-wor
 
 **Run the roadmap repo's validator if one is available.** Check the roadmap repo's conventions for
 what it is called and how to invoke it; some validators accept a pointer to a code repo and check the
-directory its `.roadmap` names, applying any `field_map`, `value_map` and `branch_pattern`. Run it
-from the code repo in that case. **Only write "validated" or "schema-checked" if you actually ran it
-and it passed** — and if the roadmap repo's own documents say no validator exists while one plainly
-runs, trust what runs and tell the user those documents are stale.
+directory its `.roadmap` names, applying any `field_map`, `value_map` and `branch_pattern`.
+
+**Point it at the roadmap directory inside your worktree** — that is the state you are about to open a
+PR from. A pointer-based invocation resolves to whichever checkout the pointer leads to, which will be
+the shared one, so it would validate the files you did *not* edit and pass while your change is
+broken. Use the worktree path directly.
+
+**Only write "validated" or "schema-checked" if you actually ran it and it passed** — and if the
+roadmap repo's own documents say no validator exists while one plainly runs, trust what runs and tell
+the user those documents are stale.
 
 If none is available, hand-check: exactly the frontmatter keys the schema allows per touched item;
 exactly one item `next` with all its `depends_on` done; every `depends_on` id exists with no cycles;
@@ -355,8 +406,17 @@ done-flip plus a README row does not need it; say which you judged it to be.
 
 ### Commit and open the PR
 
+Run all of this **from the worktree path**, so nothing touches the shared checkout.
+
 - Commit subject: the project, the item, and what shipped — `<Project>: RM-25 done — <what shipped>,
   and RM-26 next`. End the message with the same `Co-Authored-By:` trailer `/ship` uses.
+- Stage explicitly by path. Never `git add -A` — it is the shared repository's history you are writing
+  into, and a stray file committed here outlives the session.
+- **Push with the branch named: `git push -u origin rm-<id>-<project>-roadmap`.** A worktree branch
+  created off `origin/<default-branch>` inherits it as upstream, so a bare `git push` fails — and the
+  failure *suggests* `git push origin HEAD:<default-branch>`. Do not follow that suggestion. It would
+  push the roadmap edits straight onto the default branch, skipping the draft PR and landing a "done"
+  claim before the code has merged, which is the one ordering this whole section exists to protect.
 - `gh pr create --draft`, title prefixed with the project name, because several projects raise roadmap
   and code PRs in parallel and an unprefixed title gives no clue which one it belongs to.
 - The body must **say plainly that it depends on the code PR and must be merged after it**, and link
@@ -369,9 +429,12 @@ merges — that is the cost of preparing early, and it is far cheaper than the r
 ## Resuming a part-finished item
 
 If a branch named `rm-<id>-*` already exists in the code repo, or one already exists in Open-Road,
-don't start again. Work out where it got to — `git log`, `git status`, `gh pr list --head <branch>` —
-say so, and rejoin at the right step: still implementing, waiting at Gate 2, reviewed but unshipped,
-or shipped with the roadmap half outstanding.
+don't start again. Work out where it got to — `git log`, `git status`, `git worktree list`,
+`gh pr list --head <branch>` — say so, and rejoin at the right step: still implementing, waiting at
+Gate 2, reviewed but unshipped, or shipped with the roadmap half outstanding.
+
+A leftover worktree from an earlier run of *this* item is yours to reuse or remove. One belonging to
+another item or another session is not — leave it, and pick a branch name that doesn't collide.
 
 ## Final report
 
