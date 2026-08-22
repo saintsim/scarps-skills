@@ -213,7 +213,10 @@ that actually ships.
 ## 8. On the go-ahead — review, ship, then the roadmap
 
 1. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
-   shortcut the loop.
+   shortcut the loop. Anything it defers belongs in this project's deferred log in Open-Road, not in
+   the code repo — but **don't let it open a second roadmap PR**: have it report the entries rather
+   than pushing them itself, and write them onto the roadmap branch in §9, which is already opening a
+   PR against Open-Road for this item.
 2. **`/ship`** — it re-lints, updates docs, commits, pushes and opens the **draft** code PR. Title
    prefixed with project and item, e.g. `<Project>: RM-25 — <what it does>`. **Capture the PR URL** —
    the roadmap PR must link it.
@@ -274,6 +277,9 @@ Make these edits **together**:
   and say in one line why. `blocked` is derived, never declared — never mark an item `next` while a
   dependency isn't `done`; edit the `depends_on` instead. The two exceptions — everything is `done`,
   or nothing is unblocked — must be **stated in the PR, never left as silence**.
+- **Any items `/review-loop` deferred**, appended to this project's deferred log at the path
+  `SCHEMA.md`'s layout names — never overwriting existing entries, and with `file:line` references
+  left relative to the **code** repo, which is where that code lives. Nothing deferred, nothing to add.
 
 Those are the **only** `intent` edits in the run — never flip an item to `now` at pick-up. `intent` is
 hand-owned, never inferred from a green build, a merged PR or a passing review.
@@ -313,7 +319,8 @@ All of this **from the worktree path**.
 - `gh pr create --draft`, title prefixed with the project name — several projects raise PRs in
   parallel.
 - The body must **say plainly that it depends on the code PR and merges after it**, and link it; state
-  the promoted `next` and why, and any evidence that could not be measured.
+  the promoted `next` and why, any items the review deferred, and any evidence that could not be
+  measured.
 - **Draft only.** Never `gh pr ready`, never `gh pr merge`. A human merges both, in order.
 
 If the code PR changes materially in review, revisit the roadmap PR before it merges.

@@ -1,6 +1,6 @@
 ---
 name: plan-review
-description: Loop an independent Fable sub-agent review and fix cycle over markdown plans — roadmap items, build specs, project READMEs — until Fable judges them clean. For intent-only repos (e.g. Open-Road) where review-loop's code dimensions don't apply. Fable reviews only (schema adherence, repo invariants, internal consistency, dangling references, ambiguity an implementer would diverge on, feasibility/sequencing, evidence discipline); you fix every finding; the same Fable sub-agent re-reviews; repeat until clean. Findings too big to fix now are recorded in a tracked repo file — never silently ignored.
+description: Loop an independent Fable sub-agent review and fix cycle over markdown plans — roadmap items, build specs, project READMEs — until Fable judges them clean. For intent-only repos (e.g. Open-Road) where review-loop's code dimensions don't apply. Fable reviews only (schema adherence, repo invariants, internal consistency, dangling references, ambiguity an implementer would diverge on, feasibility/sequencing, evidence discipline); you fix every finding; the same Fable sub-agent re-reviews; repeat until clean. Findings too big to fix now are recorded in the project's deferred-review log — never silently ignored.
 user-invocable: true
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage
 ---
@@ -101,7 +101,7 @@ Explicitly ask: **"Is your feedback the same as the last review, or has it chang
 
 ## Deferred findings and owner decisions — the tracked file
 
-Findings too big to fix now, and fixes that belong to the owner (intent changes, reordering, renumbering), go into **`docs/deferred-review-items.md`** at the repo root (create it and the `docs/` dir if missing). Append — never overwrite:
+Findings too big to fix now, and fixes that belong to the owner (intent changes, reordering, renumbering), go into **the project's deferred-review log** — at the location this repo's own conventions name (`SCHEMA.md`'s layout, `CLAUDE.md`), never a path this skill picks. Look for the project's existing `deferred-review-items.md` first: an existing file **is** the answer, and there is **one per project** — record each finding in the log of the project whose plans it came from, not in a single shared file. Only where the repo's conventions name none does it fall back to `docs/deferred-review-items.md` at the repo root (create it and `docs/` if missing). Append — never overwrite:
 
 ```markdown
 ## <YYYY-MM-DD> — <branch> — round <N>
@@ -110,7 +110,7 @@ Findings too big to fix now, and fixes that belong to the owner (intent changes,
   - **Suggested follow-up:** <what resolving it would involve>
 ```
 
-Use today's date. Mention this file (and how many items you added) in the final report.
+Use today's date. Unlike `/review-loop`, the log is in the repo you are reviewing, so the append rides the same branch and PR as the plan fixes — it needs no separate change. Mention the log (and how many items you added) in the final report.
 
 ## Final report
 
@@ -119,7 +119,7 @@ When the loop converges (or hits the safety cap), report:
 2. **Rounds** — how many, and whether the feedback converged or oscillated.
 3. **Fixed** — the findings fixed, grouped by category, including any nits fixed under `CLEAN_AFTER_NITS`.
 4. **Contested** — any findings you pushed back on and how the reviewer ruled.
-5. **Owner decisions & deferred** — items written to `docs/deferred-review-items.md`, with the count, separating "too big for now" from "the owner must decide".
+5. **Owner decisions & deferred** — items written to the project's deferred-review log, naming the path they landed in, with the count, separating "too big for now" from "the owner must decide".
 6. **Verification** — what was mechanically checked (validator, links, cross-repo claims) and anything that could not be verified from here.
 
 Do not claim "clean" unless Fable actually said so — report faithfully.

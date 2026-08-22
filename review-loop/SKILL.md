@@ -1,6 +1,6 @@
 ---
 name: review-loop
-description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only (bugs, regressions, spec/design adherence, hardcoded reusable design elements, code quality, missing tests); you fix every finding; the same Fable sub-agent then re-reviews the fixes; repeat until Fable reports no remaining issues. Findings too big to fix now are recorded in a tracked repo file — never silently ignored.
+description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only (bugs, regressions, spec/design adherence, hardcoded reusable design elements, code quality, missing tests); you fix every finding; the same Fable sub-agent then re-reviews the fixes; repeat until Fable reports no remaining issues. Findings too big to fix now are recorded in the project's deferred-review log — never silently ignored.
 user-invocable: true
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage
 ---
@@ -100,7 +100,15 @@ Explicitly ask: **"Is your feedback the same as the last review, or has it chang
 
 ## Deferred findings — the tracked file
 
-Findings too big to fix now go into **`docs/deferred-review-items.md`** at the repo root (create it and the `docs/` dir if missing). Append an entry — never overwrite existing ones:
+Findings too big to fix now go into **the project's deferred-review log** — at the location the project's own conventions name, never a path this skill picks. Resolve it in this order:
+
+1. **The repo has a `.roadmap` pointer** → the log lives in the **roadmap repo**, alongside that project's items — not in the code repo. Read that repo's conventions (`SCHEMA.md`, `CLAUDE.md`) for the layout, and look for the project's existing `deferred-review-items.md` there. An existing file **is** the answer; never create a second one, and never add one to the code repo.
+2. **No pointer, but the repo's `CLAUDE.md` names a deferred log** → use that.
+3. **Neither** → `docs/deferred-review-items.md` at the repo root (create it and `docs/` if missing).
+
+**The log is often not in the repo you are reviewing.** When it isn't, the append is a separate change in that repo, and `/ship` will **not** carry it with the code branch: commit and push it there on its own branch, from a worktree cut off a fresh fetch of that repo's default branch — never by `switch`ing a shared checkout, which would move another session's HEAD mid-edit. **One exception:** if this session is already going to open a PR against that repo — `/roadmap-item` opens one for the item being built — don't open a second. Report the entries and let that branch carry them.
+
+Append an entry — never overwrite existing ones, and follow the shape of the entries already in the file where it has one:
 
 ```markdown
 ## <YYYY-MM-DD> — <branch> — round <N>
@@ -109,7 +117,7 @@ Findings too big to fix now go into **`docs/deferred-review-items.md`** at the r
   - **Suggested follow-up:** <what a future fix would involve>
 ```
 
-Use today's date. Mention this file (and how many items you added) in the final report so nothing is lost.
+Use today's date, and keep `file:line` references **relative to the code repo** — that is where the code is, whichever repo the log sits in. Mention the log (and how many items you added) in the final report so nothing is lost.
 
 ## Final report
 
@@ -118,7 +126,7 @@ When the loop converges (or hits the safety cap), report:
 2. **Rounds** — how many, and a one-line note on how the feedback changed each round (converging / oscillating).
 3. **Fixed** — the findings fixed, grouped by category, including any nits fixed under `CLEAN_AFTER_NITS`.
 4. **Contested** — any findings you pushed back on and how the reviewer ruled.
-5. **Deferred** — items written to `docs/deferred-review-items.md`, with the count.
+5. **Deferred** — items written to the project's deferred-review log, with the count, naming the repo and path they landed in and whether that write still needs its own PR.
 6. **UI polish** — any polish Fable suggested and whether you applied it.
 7. **Build/tests** — final build/test status, and anything that could not be executed in this environment.
 
