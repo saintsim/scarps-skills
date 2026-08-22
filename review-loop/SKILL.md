@@ -1,6 +1,6 @@
 ---
 name: review-loop
-description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only (bugs, regressions, spec/design adherence, hardcoded reusable design elements, code quality, missing tests); you fix every finding; the same Fable sub-agent then re-reviews the fixes; repeat until Fable reports no remaining issues. Findings too big to fix now are recorded in a tracked repo file — never silently ignored.
+description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only (bugs, regressions, spec/design adherence, hardcoded reusable design elements, code quality, missing tests); you fix every finding; the same Fable sub-agent then re-reviews the fixes; repeat until Fable reports no remaining issues. Findings too big to fix now are recorded in the project's deferred-review log — never silently ignored.
 user-invocable: true
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage
 ---
@@ -106,7 +106,7 @@ Findings too big to fix now go into **the project's deferred-review log** — at
 2. **No pointer, but the repo's `CLAUDE.md` names a deferred log** → use that.
 3. **Neither** → `docs/deferred-review-items.md` at the repo root (create it and `docs/` if missing).
 
-**The log is often not in the repo you are reviewing.** When it isn't, the append is a separate change in that repo, and `/ship` will **not** carry it with the code branch: commit and push it there on its own branch, from a worktree cut off a fresh fetch of that repo's default branch — never by `switch`ing a shared checkout, which would move another session's HEAD mid-edit.
+**The log is often not in the repo you are reviewing.** When it isn't, the append is a separate change in that repo, and `/ship` will **not** carry it with the code branch: commit and push it there on its own branch, from a worktree cut off a fresh fetch of that repo's default branch — never by `switch`ing a shared checkout, which would move another session's HEAD mid-edit. **One exception:** if this session is already going to open a PR against that repo — `/roadmap-item` opens one for the item being built — don't open a second. Report the entries and let that branch carry them.
 
 Append an entry — never overwrite existing ones, and follow the shape of the entries already in the file where it has one:
 
