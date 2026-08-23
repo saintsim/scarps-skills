@@ -22,6 +22,13 @@ Determine what to review from `$ARGUMENTS`:
 - An item id (e.g. `RM-05`), file, directory, or project name → review that scope, plus everything that references it.
 - `"all"` or a project folder → audit that whole plan set against the repo's rules.
 
+**Not for recording an item done.** This loop is for plans that are new or restructured — a newly
+written item, a renumbering, a deliberate `depends_on` rework, a spec reconciliation — so that an
+implementing agent can build against them. Marking an item `done` is not that, even though it edits
+`depends_on` and touches the README: it is bookkeeping, verified by the roadmap repo's validator or by
+hand-check. If you were sent here to record a completion, **stop and hand back** — the done-flip does
+not gate on this review.
+
 Run `git status` and `git branch --show-current` first. Then **identify the repo's authority documents** — the schema/contract doc (e.g. `SCHEMA.md`), the repo-root CLAUDE.md, and any per-project CLAUDE.md/README covering the scope — and name them in the reviewer's prompt. Report the resolved scope before starting round 1.
 
 ## The loop

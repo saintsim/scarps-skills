@@ -300,9 +300,14 @@ Otherwise hand-check: only the frontmatter keys the schema allows; exactly one i
 its `depends_on` done; every `depends_on` id exists, no cycles; the README table matches the
 frontmatter; any count stated in prose still matches the files.
 
-**Run `/plan-review` when the change is non-trivial** — it adds or renumbers items, edits
-`depends_on`, reorders the README, or reconciles the spec. A plain done-flip plus a README row does
-not need it; say which you judged it to be.
+**Run `/plan-review` only when the change authors or restructures the plan** — a newly written item,
+a renumbering, a deliberate rework of a `depends_on` graph, or a reconciliation of the spec with what
+was built. Its job is to make sure an implementing agent can build against the plan.
+
+**Recording an item done is none of those, and never invokes it.** A done-flip clears the finished
+item from its dependents' `depends_on` and reconciles the README's row, counts and prose as a matter
+of course — that is bookkeeping, not restructuring, and the validator or hand-check above is its
+verification. Say which of the two you judged the change to be.
 
 ### Commit and open the PR
 
