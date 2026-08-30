@@ -13,11 +13,35 @@ every project picks the skills up automatically.
 | [`roadmap-item`](roadmap-item/SKILL.md) | `work on RM-25` / `/roadmap-item RM-25` | Picks up an **Open-Road** roadmap item by bare id and builds it in whichever code repo you're standing in — resolving the project from that repo's `.roadmap` pointer (or, for a companion repo that has none, by matching its remote against each item's `repos:`), because ids are per project and the same `RM-25` can exist in more than one. Reads the item and its authorities, asks up front only if the item is too thin to build from, branches `rm-<id>-<slug>` off the freshly fetched default branch, implements, then **builds and runs the unit tests** before stopping for you to test (UI tests are compiled but not run — too slow — unless your diff touched one). On your go-ahead: `/review-loop` → `/ship` → a paired **draft** Open-Road PR marking the item done, with evidence, the README row flipped and one item promoted to `next`. Say "don't wait for me to test" to run straight through. |
 | [`review-loop`](review-loop/SKILL.md) | `/review-loop [scope]` | Loops an **independent Fable sub-agent** code review + fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same Fable sub-agent re-reviews; repeat until clean. Findings too big to fix now are recorded in the project's **deferred-review log**, wherever the project's own conventions put it — for an Open-Road project that's alongside its roadmap items, not in the code repo; `docs/deferred-review-items.md` only where a repo names none. Never silently ignored. Runs unattended. |
 | [`plan-review`](plan-review/SKILL.md) | `/plan-review [scope]` | The plans counterpart of `review-loop`, for **intent-only repos** (e.g. Open-Road). Same independent Fable loop, but reviewing markdown plans against the repo's schema and conventions: frontmatter validity, repo invariants, dangling references, spec/item consistency, ambiguity an implementer would diverge on, sequencing, and evidence discipline. Owner-only fixes (intent, ordering, renumbering) are recorded, never made. Runs unattended. |
+| [`swift-verify`](swift-verify/SKILL.md) | `/swift-verify` | **Swift/Xcode projects, locally.** Runs the fixed ladder — **SwiftLint → `build` → `build-for-testing` → the unit (non-UI) tests** — fixing failures and re-running until green. Usual entry is straight after a `/teleport` from a web session, where nothing has been compiled by a real toolchain yet. Scheme, test targets and simulator are discovered at run time, and a repo that pins a particular runtime in its own docs gets honoured. Never gets green by weakening the check (no skipped, disabled or loosened tests), never commits, never launches the app. Records the run in `.git/swift-verify-state.json` so the UI skill can pick up from it. |
+| [`swift-verify-ui`](swift-verify-ui/SKILL.md) | `/swift-verify-ui` | The **UI-test** counterpart. Run it straight after `/swift-verify` and it runs **only the UI suites** — it checks the recorded run against `HEAD` plus a working-tree fingerprint, so an untouched tree skips the ladder and any edit since re-runs it. Pulls failure screenshots and the UI hierarchy out of the result bundle before theorising, distinguishes "the app is broken" from "the test is looking in the wrong place", names flakes instead of re-running until one passes, and re-runs the unit suites when a fix touched app code. |
 | [`ship`](ship/SKILL.md) | `/ship` | Ships the current changes on **GitHub** (assumes review is done). Re-lints if a linter exists, ensures repo docs are up to date, branches off the default branch, commits, pushes, and opens a **draft** PR with a title + description. Never marks ready-for-review and never merges — human stays in the loop. |
 | [`move-raise-feedback`](move-raise-feedback/SKILL.md) | `/move-raise-feedback` | **MoveIt** — from a client repo (iOS/web-desk), composes the client's backend feedback and delivers it into the `MoveIt-API` inbox via a **draft PR**. |
 | [`move-apply-feedback`](move-apply-feedback/SKILL.md) | `/move-apply-feedback` | **MoveIt** — from a client repo, pulls the backend's latest reply, implements the changes it enables, updates the scoreboard, drafts a reply back. |
 | [`move-answer-feedback`](move-answer-feedback/SKILL.md) | `/move-answer-feedback` | **MoveIt** — from `MoveIt-API`, addresses the clients' inbound feedback and writes dated `backend-response-<client>` replies with a status table. |
 | [`setup`](setup/SKILL.md) | `/setup` | Installs every skill in this repo onto the current machine by symlinking each skill directory into `~/.claude/skills/`. Idempotent — safe to re-run after pulling new skills. |
+
+### Local verification after a teleport
+
+Web and cloud sessions have no Xcode and no simulator, so code written there is *unverified* by
+definition — it has never been compiled by the toolchain that ships it. `/teleport` brings that work
+down to the Mac; `swift-verify` is what proves it:
+
+```
+/teleport  →  /swift-verify      lint → build → build-for-testing → unit tests → fix → green
+           →  /swift-verify-ui   (UI suites only, if the tree hasn't changed since)
+```
+
+The pair is deliberately split because the UI suites cost minutes the unit suites don't, and most
+runs don't need them. Running them back to back does not repeat work: `swift-verify` records the
+run in `.git/swift-verify-state.json` — HEAD, a working-tree fingerprint, and what each stage did —
+and `swift-verify-ui` reuses it when the tree is untouched, or re-runs the whole ladder when it
+isn't. The fingerprint is the safety catch: one edit in between and the earlier pass no longer
+counts, which is exactly how a run would otherwise declare green over code nobody compiled.
+
+Both need Xcode and a simulator, so they only do anything on a Mac — there is no point uploading
+them to claude.ai for cloud sessions. Neither commits, pushes or opens a PR — `/ship` does that
+when you ask for it.
 
 ### Open-Road roadmap loop
 
