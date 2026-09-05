@@ -52,6 +52,10 @@ Spawn **one** Fable sub-agent with the **Agent** tool (`model: "fable"`,
 *same* agent via `SendMessage`, so it remembers its earlier findings and can tell you honestly
 whether anything changed.
 
+**Reasoning effort:** when the Fable model is **5.1 or newer**, run the reviewer at **medium**
+effort, not high — medium is enough for this loop and high burns far more tokens for no gain in
+review quality. On older Fable, keep the default effort.
+
 Write the reviewer a thorough, self-contained prompt: the resolved scope, the authority documents by
 path, and any invariants specific to this repo. Instruct it to:
 
