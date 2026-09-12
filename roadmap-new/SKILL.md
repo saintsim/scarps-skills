@@ -64,9 +64,14 @@ A repo whose roadmap is new may not carry them yet, and `gh issue create --label
 outright on a label that does not exist — so the item never gets made. Create what is missing; both
 commands are no-ops when the label is already there.
 
+Create `roadmap` and **the intent label this item is about to carry** — `intent:idea` on the park-it
+path, `intent:later` otherwise. Ensuring only `later` leaves "park an idea" dying on a fresh repo,
+which is the same failure one step along.
+
 ```sh
 gh label create roadmap --color 5319e7 --description 'a roadmap item, not an ordinary issue' 2>/dev/null || true
 gh label create intent:later --color 8b949e --description 'intent: later — queued, hand-owned' 2>/dev/null || true
+gh label create intent:idea --color fbca04 --description 'intent: idea — parked, hand-owned' 2>/dev/null || true
 ```
 
 On the web the MCP server has no label-create call: if the create then fails for a missing label,
