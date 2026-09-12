@@ -45,7 +45,10 @@ instead and stop unless the user says otherwise.
   <checkable conditions — a reader can say yes or no to each>
   ```
 
-- **Label** — `intent:later` **by default**; `intent:idea` when the user says *park it*, *idea*,
+- **Labels** — **always `roadmap`**, plus an intent. The `roadmap` label is what makes an issue a
+  roadmap item at all: most repos' trackers already hold ordinary bugs and features, and the board
+  reads only labelled issues, so an item created without it is invisible. Then `intent:later` **by
+  default**; `intent:idea` when the user says *park it*, *idea*,
   *someday*, or equivalent. This is the one place a skill writes an intent label, because an open
   issue with none is a validation finding and the user asked for the item in this message. Never
   `intent:now` or `intent:next` here — those are the owner's, via `/roadmap-edit`.
@@ -60,7 +63,8 @@ it.
 One `issue_write` (method `create`) with title, body and labels — or:
 
 ```sh
-gh issue create --title '<title>' --body-file <file> --label intent:later [--milestone '<phase>']
+gh issue create --title '<title>' --body-file <file> \
+  --label roadmap --label intent:later [--milestone '<phase>']
 ```
 
 ## Report

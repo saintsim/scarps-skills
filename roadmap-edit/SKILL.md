@@ -49,6 +49,10 @@ conversation shows exactly what moved. Do not bundle an unrequested change into 
   the user said; `gh issue close N --reason completed|"not planned"`. Ask if the message does not
   say which. **Reopen** only on instruction, likewise.
 - **Milestone** — set or move to the named phase.
+- **Promote an ordinary issue to a roadmap item** — add the `roadmap` label, and an `intent:` one
+  in the same edit, since an item with no intent is a validation finding. This is the supported way
+  a bug report already in the tracker becomes roadmap work; dropping the `roadmap` label again
+  demotes it without losing the issue or its history.
 
 ## Report
 
