@@ -53,6 +53,11 @@ conversation shows exactly what moved. Do not bundle an unrequested change into 
   in the same edit, since an item with no intent is a validation finding. This is the supported way
   a bug report already in the tracker becomes roadmap work; dropping the `roadmap` label again
   demotes it without losing the issue or its history.
+- **Promote a deferred finding** — the same edit, on an issue labelled `deferred`: add `roadmap` and
+  an intent, and **remove `deferred`**, since it is no longer deferred. This is what the review loop
+  means when it says a finding is one edit from becoming an item — the issue number, the reviewer's
+  words and the why-deferred reasoning all come with it, rather than being retyped. Only on the
+  user's instruction: a deferred finding is precisely work nobody has yet decided to do.
 
 ## Report
 

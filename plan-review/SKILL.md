@@ -189,16 +189,52 @@ answer each round.
 **Safety cap:** if you reach **6 rounds** without converging, or findings start oscillating, **stop**
 and report the state to the user rather than looping forever.
 
-## Deferred findings and owner decisions — the tracked file
+## Deferred findings — an issue, labelled `deferred`
 
-Findings too big to fix now, and fixes that belong to the owner (intent changes, reordering,
-renumbering), go into **the project's deferred-review log** — at the location this repo's own
-conventions name (`SCHEMA.md`'s layout, `CLAUDE.md`), never a path this skill picks. Look for the
-project's existing `deferred-review-items.md` first: an existing file **is** the answer, and there is
-**one per project** — record each finding in the log of the project whose plans it came from, not in
-a single shared file. Only where the repo's conventions name none does it fall back to
-`docs/deferred-review-items.md` at the repo root (create it and `docs/` if missing). Append — never
-overwrite:
+A finding too big to fix now is **recorded, never silently ignored**. Where it is recorded depends on
+how the project keeps its roadmap, and there is one question to ask: does the repo's `.roadmap` say
+`kind: github-issues`?
+
+**Yes — file an issue on that repo, labelled `deferred` and nothing else.** Not a markdown log: the
+finding is about that repo's code, it belongs beside it, and promotion is then one label edit rather
+than a retype. Create the label if it is missing (no-op when it is not):
+
+```sh
+gh label create deferred --color c5def5 \
+  --description 'a deferred review finding — not roadmap work until promoted' 2>/dev/null || true
+gh issue create --repo <owner>/<repo> --label deferred --title '<title>' --body-file <file>
+```
+
+- **Title:** `[<category>] <subject> — <the finding, trimmed>`, about 90 characters. The category is
+  the one you gave the finding (`correctness`, `test-coverage`, `cleanup`, …), lower-cased.
+- **Body:** the finding as the reviewer described it, then **Why deferred** and **Suggested
+  follow-up**, then a line saying it is not roadmap work. `file:line` references stay relative to the
+  code repo, which is now the same repo.
+- **Never add an `intent:` label and never add `roadmap`.** A deferred finding is not work anyone has
+  decided to do, and `intent` is hand-owned. A `deferred` issue carrying no `roadmap` label is
+  invisible to the board by design, which is the whole point of the split.
+- **Promotion is the owner's**, and it is one `/roadmap-edit` away: add `roadmap` plus an intent and
+  the finding becomes an item, carrying its issue number and history with it. Say in your final
+  report that this is how it would be picked up; do not do it yourself.
+
+**No — the project keeps a markdown roadmap, or none at all.** Then use the markdown log, at the
+location the project's own conventions name, never a path this skill picks:
+
+1. **A `.roadmap` pointer at a markdown roadmap** → the log lives in the **roadmap repo**, alongside
+   that project's items. Read that repo's conventions (`SCHEMA.md`, `CLAUDE.md`) for the layout and
+   look for an existing `deferred-review-items.md`. An existing file **is** the answer; never create a
+   second one, and never add one to the code repo.
+2. **No pointer, but the repo's `CLAUDE.md` names a deferred log** → use that.
+3. **Neither** → `docs/deferred-review-items.md` at the repo root (create it and `docs/` if missing).
+
+**That log is often not in the repo you are reviewing.** When it isn't, the append is a separate
+change in that repo, and `/ship` will **not** carry it with the code branch: commit and push it there
+on its own branch, from a worktree cut off a fresh fetch of that repo's default branch — never by
+`switch`ing a shared checkout, which would move another session's HEAD mid-edit. **One exception:** if
+this session is already going to open a PR against that repo, don't open a second; report the entries
+and let that branch carry them.
+
+Append an entry — never overwrite existing ones, and follow the shape of the entries already there:
 
 ```markdown
 ## <YYYY-MM-DD> — <branch> — round <N>
