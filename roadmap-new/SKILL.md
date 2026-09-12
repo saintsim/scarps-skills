@@ -58,7 +58,22 @@ If *Why* or *Done when* cannot be written from what the user said, ask once, wit
 AskUserQuestion, rather than inventing them — the body is read as the requirement by whoever builds
 it.
 
-## 3. Create it
+## 3. Make sure the labels exist
+
+A repo whose roadmap is new may not carry them yet, and `gh issue create --label roadmap` fails
+outright on a label that does not exist — so the item never gets made. Create what is missing; both
+commands are no-ops when the label is already there.
+
+```sh
+gh label create roadmap --color 5319e7 --description 'a roadmap item, not an ordinary issue' 2>/dev/null || true
+gh label create intent:later --color 8b949e --description 'intent: later — queued, hand-owned' 2>/dev/null || true
+```
+
+On the web the MCP server has no label-create call: if the create then fails for a missing label,
+say so and ask the user to add it rather than dropping the label and filing an item the board
+cannot see.
+
+## 4. Create it
 
 One `issue_write` (method `create`) with title, body and labels — or:
 
