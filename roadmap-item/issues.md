@@ -43,6 +43,12 @@ stop; do not fall back to guessing a markdown file.
 - **No id given** ("start the next item") → the one open issue labelled `intent:next`; none or
   several → ask.
 
+**An issue without the `roadmap` label is not a roadmap item.** Most repos' trackers hold ordinary
+bugs and feature requests that predate the roadmap — PackRight had 66 — and the board reads only
+labelled issues. If the id you are given resolves to an unlabelled issue, say so and stop rather
+than picking it up: either it is not roadmap work, or it needs promoting first (`/roadmap-edit`,
+which adds the label).
+
 **Blocked check.** The first body line matching `Depends on: #12, #15` is the dependency list. Read
 **each** dependency's state: any still open means the item is blocked — name the blocker and ask
 whether to proceed. One closed as *not planned* was dropped, not done; ask about that too.

@@ -27,6 +27,12 @@ searching open and closed titles for the prefix `RM-NN —` and matching the sta
 --search '…'`). **Confirm the issue exists and show its number and title** before going on; a wrong
 issue gets a comment nobody will notice is misplaced.
 
+**An issue without the `roadmap` label is not a roadmap item.** Most repos' trackers hold ordinary
+bugs and feature requests that predate the roadmap — PackRight had 66 — and the board reads only
+labelled issues. If the id you are given resolves to an unlabelled issue, say so and stop rather
+than picking it up: either it is not roadmap work, or it needs promoting first (`/roadmap-edit`,
+which adds the label).
+
 ## 2. Gather the state — three to six lines
 
 ```sh
