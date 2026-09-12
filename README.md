@@ -10,7 +10,10 @@ every project picks the skills up automatically.
 
 | Skill | Invoke | What it does |
 | --- | --- | --- |
-| [`roadmap-item`](roadmap-item/SKILL.md) | `work on RM-25` / `/roadmap-item RM-25` | Picks up an **Open-Road** roadmap item by bare id and builds it in whichever code repo you're standing in — resolving the project from that repo's `.roadmap` pointer (or, for a companion repo that has none, by matching its remote against each item's `repos:`), because ids are per project and the same `RM-25` can exist in more than one. Reads the item and its authorities, asks up front only if the item is too thin to build from, branches `rm-<id>-<slug>` off the freshly fetched default branch, implements, then **builds and runs the unit tests** before stopping for you to test (UI tests are compiled but not run — too slow — unless your diff touched one). On your go-ahead: `/review-loop` → `/ship` → a paired **draft** Open-Road PR marking the item done, with evidence, the README row flipped and one item promoted to `next`. Say "don't wait for me to test" to run straight through. |
+| [`roadmap-item`](roadmap-item/SKILL.md) | `work on #41` / `work on RM-25` / `/roadmap-item #41` | Picks up a roadmap item by bare id and builds it in whichever code repo you're standing in. Reads the repo's `.roadmap` and follows one of two flows: **`kind: github-issues`** ([`issues.md`](roadmap-item/issues.md)) — the item is an issue on the code repo, a migrated one also answers to its old `RM-NN` alias, and the skill **posts a start comment and adds `in-progress` before branching**, so the pick-up is visible from any machine; or **Open-Road markdown** ([`markdown.md`](roadmap-item/markdown.md)) — resolves the project from the pointer (or a companion repo's remote against each item's `repos:`). Either way: read the item and its authorities, ask only if the item is too thin, branch off the freshly fetched default branch, implement, **build and run the unit tests**, stop for you to test. On your go-ahead: `/review-loop` → `/ship` (draft PR, `Refs #N`) → a **Delivered comment** on the issue (issues flow) or a paired **draft** Open-Road PR (markdown flow). Never writes an intent label, never closes an issue. Say "don't wait for me to test" to run straight through. |
+| [`roadmap-checkin`](roadmap-checkin/SKILL.md) | `/roadmap-checkin` | For a session **already mid-way through an item** that never announced itself — a pick-up from before the roadmap moved to issues, or one made by hand. Works out the issue (from the branch, the message, or asks), gathers the real state from git and any PR, posts the start comment with that state, adds `in-progress`. Builds nothing. |
+| [`roadmap-new`](roadmap-new/SKILL.md) | `/roadmap-new` | Creates a roadmap item as an issue on the current code repo: searches for duplicates first, composes *Why / Scope / Done when* with a `Depends on:` line only when there are dependencies, labels it `intent:later` (or `intent:idea` when you say park it) — the one place a skill writes an intent label, and only at creation. |
+| [`roadmap-edit`](roadmap-edit/SKILL.md) | `/roadmap-edit` | Changes one item exactly as you instruct — retitle, rewrite a section, change `Depends on:`, set intent (`make #41 next`), close as done or not planned. One named edit per change, echoed back. Intent is never inferred from a merged PR, a green build or a Delivered comment. |
 | [`review-loop`](review-loop/SKILL.md) | `/review-loop [scope]` | Loops an **independent Fable sub-agent** code review + fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same Fable sub-agent re-reviews; repeat until clean. Findings too big to fix now are recorded in the project's **deferred-review log**, wherever the project's own conventions put it — for an Open-Road project that's alongside its roadmap items, not in the code repo; `docs/deferred-review-items.md` only where a repo names none. Never silently ignored. Runs unattended. |
 | [`plan-review`](plan-review/SKILL.md) | `/plan-review [scope]` | The plans counterpart of `review-loop`, for **intent-only repos** (e.g. Open-Road). Same independent Fable loop, but reviewing markdown plans against the repo's schema and conventions: frontmatter validity, repo invariants, dangling references, spec/item consistency, ambiguity an implementer would diverge on, sequencing, and evidence discipline. Owner-only fixes (intent, ordering, renumbering) are recorded, never made. Runs unattended. |
 | [`swift-verify`](swift-verify/SKILL.md) | `/swift-verify` | **Swift/Xcode projects, locally.** Runs the fixed ladder — **SwiftLint → `build` → `build-for-testing` → the unit (non-UI) tests** — fixing failures and re-running until green. Usual entry is straight after a `/teleport` from a web session, where nothing has been compiled by a real toolchain yet. Scheme, test targets and simulator are discovered at run time, and a repo that pins a particular runtime in its own docs gets honoured. Never gets green by weakening the check (no skipped, disabled or loosened tests), never commits, never launches the app. Records the run in `.git/swift-verify-state.json` so the UI skill can pick up from it. |
@@ -43,26 +46,31 @@ Both need Xcode and a simulator, so they only do anything on a Mac — there is 
 them to claude.ai for cloud sessions. Neither commits, pushes or opens a PR — `/ship` does that
 when you ask for it.
 
-### Open-Road roadmap loop
+### Roadmap loop
 
-[Open-Road](https://github.com/saintsim/Open-Road) holds **intent, not code** — one folder
-per project, with the build spec and the roadmap items. The roadmap always lives there; the
-code lives in each project's own repo, which points back with a `.roadmap` file.
-`roadmap-item` is the bridge: stand in the code repo, name the id, and it does the rest.
-A companion repo with no pointer of its own still resolves, by matching its remote against
-the `repos:` each item already names — and if it's still ambiguous, the skill asks.
+A code repo says where its roadmap lives with a `.roadmap` file at its root, and there are two
+kinds. **GitHub Issues on the code repo itself** (`kind: github-issues`) — the issue number is the
+id, intent is an `intent:` label or the closed state, `Depends on:` is a body line, and every
+pick-up leaves a **start comment** naming its surface (web or a Mac) with a link back, so a board
+such as Sidebar can show who has what in hand. Or **Open-Road markdown** — [Open-Road](https://github.com/saintsim/Open-Road)
+holds intent, one folder per project, and the pointer names the folder. `roadmap-item` reads the
+pointer and follows the matching flow; the three `roadmap-*` companions are issues-only.
 
 ```
-<code repo>/  work on RM-25  → resolve project (.roadmap, else repos:) → read item + conventions
-                             → branch rm-25-<slug> → implement → build + test → STOP, you test
-              (go-ahead)     → /review-loop → /ship (draft code PR)
-                             → Open-Road draft PR: intent done, evidence, README row, next item
+issues:   work on #41   → read issue + deps + CLAUDE.md → start comment + in-progress
+                        → branch 41-<slug> → implement → build + test → STOP, you test
+          (go-ahead)    → /review-loop → /ship (draft PR, Refs #41) → Delivered comment
+                        → in-progress off; the owner closes the issue
+
+markdown: work on RM-25 → resolve project (.roadmap, else repos:) → read item + conventions
+                        → branch rm-25-<slug> → implement → build + test → STOP, you test
+          (go-ahead)    → /review-loop → /ship (draft code PR)
+                        → Open-Road draft PR: intent done, evidence, README row, next item
 ```
 
 Ids are **per project**, not global — two projects can each carry an `RM-25`, and they're
-unrelated items — so the project is always resolved from the repo you're in, never by
-searching Open-Road for the filename. The code PR merges first; both are opened as drafts
-together so you can merge the pair in one sitting.
+unrelated items — so the project is always resolved from the repo you're in. `intent` is
+hand-owned in both flows: no skill here infers it, and a PR body says `Refs #N`, never `Closes`.
 
 ### MoveIt feedback loop
 
