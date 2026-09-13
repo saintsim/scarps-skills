@@ -1,6 +1,6 @@
 ---
 name: roadmap-checkin
-description: Post the start comment for a roadmap item this session is ALREADY mid-way through and has never announced — a pick-up that predates the move to GitHub Issues, or one made by hand. Use when the user says "check in", "mark this as started", "post the start comment", or asks why the board does not show this work as in hand. Never writes an intent label and never closes an issue.
+description: Post the start comment for a roadmap item this session is ALREADY mid-way through and has never announced — a pick-up that predates the move to GitHub Issues, one made by hand, or one pulled down from the web with `claude --teleport` so the board still names claude.ai as the machine. Use when the user says "check in", "mark this as started", "post the start comment", "I teleported this", or asks why the board does not show this work as in hand, or shows it on the wrong machine. Never writes an intent label and never closes an issue.
 user-invocable: true
 allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, mcp__github__issue_read, mcp__github__issue_write, mcp__github__list_issues, mcp__github__search_issues, mcp__github__add_issue_comment, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
@@ -55,6 +55,19 @@ Read the repo, not memory — the paragraph is what a reader on another machine 
   under `~/.claude/projects/` modified in the last minute and say the uuid was inferred.
   `host` is `hostname -s`; `link` is `http://<host>.local:8787/session/<uuid>`.
 
+**Remote Control does not change either of those.** A local session with `/rc` on keeps running on
+the Mac; claude.ai is a second keyboard on it, not a second machine. `surface` stays `local`,
+`host` stays the hostname, and `remote_control:` records the one thing it adds — reachability from
+a phone:
+
+```sh
+env | grep -i 'remote.control' || true          # a URL or id here, or nothing
+```
+
+Write it only when Remote Control is on for this session: a URL if one is there, else
+`remote_control: enabled`. **Never ask the user to paste the URL**, and omit the key entirely
+when `/rc` is off, so its absence reliably means "not reachable".
+
 Timestamp UTC ISO 8601 to the minute (`date -u +%Y-%m-%dT%H:%MZ`). Marker, yaml fence and keys
 **verbatim** — Sidebar parses them.
 
@@ -75,8 +88,16 @@ branch: 41-issues-roadmap
 
 For local: `surface: local`, `session: <uuid>`, `link: http://<host>.local:8787/session/<uuid>`,
 `host: <hostname>`. **Never edit an earlier start comment** — if one already exists, this is a
-resume and still posts a new one. Then `issue_write` with `labels` = existing labels plus
-`in-progress`, or `gh issue edit <N> --add-label in-progress`.
+resume and still posts a new one.
+
+Then `issue_write` with `labels` = existing labels plus `in-progress`, or `gh issue edit <N>
+--add-label in-progress`.
+
+**A session pulled down with `claude --teleport` is exactly what this skill is for.** The terminal
+gets its own copy of the session and new work there never reaches the cloud one again, so the web
+start comment already on the issue now names claude.ai as the machine and links to a copy that has
+stopped moving. Check in from the Mac and the latest comment says where the work actually is; say in
+the paragraph that it was teleported from the web session.
 
 **Never write an `intent:` label. Never close the issue.** Those are the owner's.
 

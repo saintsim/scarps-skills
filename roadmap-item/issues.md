@@ -94,8 +94,28 @@ branch, so the pick-up is visible even if nothing is ever pushed.
   `*.jsonl` under `~/.claude/projects/` modified in the last minute, and say in the paragraph that
   the uuid was inferred. `host` is `hostname -s`; `link` is `http://<host>.local:8787/session/<uuid>`.
 
+**Remote Control does not change either of those.** A local session with `/rc` on keeps running on
+the Mac — Claude Code's own documentation is explicit that "Claude keeps running locally the entire
+time, so your code execution and filesystem access stay on your machine" — and claude.ai is a second
+keyboard on it, not a second machine. So `surface` stays `local` and `host` stays the hostname. It
+adds one thing: a way to reach that session from a phone, which `remote_control:` records.
+
+```sh
+env | grep -i 'remote.control' || true          # a URL or id here, or nothing
+```
+
+Write `remote_control:` only when Remote Control is actually on for this session. Prefer a URL the
+environment or your system prompt names; if Remote Control is on but nothing carries the URL, write
+`remote_control: enabled` — that alone tells a reader the session is reachable from the Claude app,
+where it is named for this machine's hostname by default. **Never ask the user to paste the URL**,
+and never write the key at all when `/rc` is off: a reader must be able to trust that its absence
+means "not reachable". `enabled` rather than `on` or `yes` deliberately — those two are booleans in
+YAML 1.1, so a stricter parser than Sidebar's would read the field as `true` and choke where it
+expected the URL.
+
 Timestamp UTC ISO 8601 to the minute (`date -u +%Y-%m-%dT%H:%MZ`). Keep the marker, the yaml fence
-and the keys **verbatim** — Sidebar parses them. `branch:` is omitted before the branch exists.
+and the keys **verbatim** — Sidebar parses them. `branch:` is omitted before the branch exists, and
+`remote_control:` is omitted whenever Remote Control is off.
 
 ````markdown
 <!-- sidebar:start -->
@@ -111,10 +131,40 @@ host: claude.ai
 Starting from the item as written.
 ````
 
+A local pick-up on a Mac with Remote Control on, which is the same shape plus one key:
+
+````markdown
+<!-- sidebar:start -->
+**Started** on **mac-mini** · 2026-09-13T19:20Z
+
+```yaml
+surface: local
+session: 9f2c1e04-7a3b-4d51-8c6e-2b0f4a7d9e13
+link: http://mac-mini.local:8787/session/9f2c1e04-7a3b-4d51-8c6e-2b0f4a7d9e13
+host: mac-mini
+remote_control: enabled
+```
+
+Starting from the item as written.
+````
+
 For local: `surface: local`, `session: <uuid>`, `link: http://<host>.local:8787/session/<uuid>`,
 `host: <hostname>`. The paragraph states the work's state — a fresh pick-up is "starting from the
 item as written"; a resume says what is built, what is uncommitted or unpushed, and the PR URL if one
 exists. **One start comment per pick-up; never edit an earlier one** — history is the point.
+
+**Arriving by teleport is a new pick-up, and it needs its own comment.** Work often starts on the
+web and is pulled down with `claude --teleport`; the terminal then gets *its own copy* of the
+session, and new work there never appears in the cloud session again. So the web start comment
+already on the issue is now describing a **dead copy** — it names claude.ai as the machine and
+offers a link to a session that has stopped moving. Left alone, every reader is pointed at the wrong
+place.
+
+If this session arrived by teleport — its history begins on the web, or the user says they
+teleported it — **post a fresh start comment before continuing**, with `surface: local`, this Mac's
+`host`, the local `session` uuid, and a paragraph saying it was teleported from the web session and
+where that one stopped. Do not edit the web comment: both pick-ups are true, in that order, and the
+latest is the one that says where the work is now.
 
 Then add the label (`issue_write` with `labels` = the existing labels plus `in-progress`, or
 `gh issue edit <N> --add-label in-progress`) and capture the comment URL for the report.
