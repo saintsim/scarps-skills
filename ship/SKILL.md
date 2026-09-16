@@ -2,7 +2,7 @@
 name: ship
 description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Assumes code review is already done (does NOT run one). Never marks the PR ready for review and never merges — a human stays in the loop.
 user-invocable: true
-allowed-tools: Bash, Read, Grep, Glob, Edit
+allowed-tools: Bash, Read, Grep, Glob, Edit, mcp__github__issue_read, mcp__github__create_pull_request, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
 
 You are shipping the current changes to GitHub. **Review is assumed already done** (e.g. via
@@ -89,7 +89,42 @@ git push -u origin <branch>
 ```
 Confirm the push succeeded and the branch is tracking `origin/<branch>`.
 
-### 7. Open a DRAFT pull request
+### 7. Work out which roadmap item this belongs to
+
+**A pull request that does not name its item is invisible to every board.** A phone cannot ask
+GitHub "which issue is this PR for" — it reads the item id out of the PR **body**, so a body without
+one leaves the work unattached however correct the code is. This step costs one `grep` and is the
+difference between a board showing the item in hand with a way through to the review, and showing
+nothing at all.
+
+```sh
+grep -E '^kind:' "$(git rev-parse --show-toplevel)/.roadmap" 2>/dev/null   # github-issues, or nothing
+git branch --show-current
+```
+
+No `.roadmap`, or no `kind: github-issues` line → this repo is not on issues; skip to §8 and write no
+reference. Otherwise take the item from, in order:
+
+**This is the opposite order to `/roadmap-checkin`, deliberately.** That skill announces *a
+session*, so the id it was handed wins over whatever branch is checked out. This one describes *a
+diff*, and the branch is the thing being shipped — a `Refs` naming an id from earlier in the
+conversation would attach this code to an item it does not implement.
+
+1. **The branch** — `<N>-<slug>` is issue `N`, `rm-NN-*` is the alias `RM-NN`. This is the
+   convention, so it usually answers.
+2. **An id the user or the calling skill named** in this session.
+3. **A start comment you posted** for this work.
+
+**If none of those resolve it, ask** — one line, before opening the PR. Do not guess a number: a
+`Refs #39` pointing at the wrong item is worse than none, because it attaches this work to somebody
+else's on the board. **Where routes 1 and 2 disagree** — a branch `41-…` carrying work for a `#58`
+raised mid-session — ask as well: that mismatch means the branch and the work have come apart, and
+neither is reliably right.
+
+If the work genuinely has no item — a stray fix, a repo not on the roadmap — say so in the report and
+carry on without a reference.
+
+### 8. Open a DRAFT pull request
 
 ```sh
 gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"
@@ -100,6 +135,9 @@ gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"
   - **Changes** — the key changes as a short bullet list.
   - **Testing** — how it was verified. There's no paid GitHub CI, so state the **local**
     build/test/lint result.
+  - **`Refs #<N>`** on its own line, when §7 resolved an item. **Never `Closes`, `Fixes` or
+    `Resolves`** — those close the issue on merge, which is automation writing intent, and intent is
+    hand-owned. This line is what attaches the pull request to the item everywhere it is read.
   - End the body with this line exactly:
     ```
     🤖 Generated with [Claude Code](https://claude.com/claude-code)
@@ -108,9 +146,9 @@ gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"
   the user to run `! gh auth login` (the `!` prefix runs it in-session), then re-run `/ship`.
 - **Do not** mark the PR ready for review and **do not** merge it.
 
-### 8. Report
+### 9. Report
 
 Tell the user: the branch (and whether it was newly created); the commit subject; push status; the
 **draft PR URL**, noting it's a **draft awaiting their review** — they decide when to mark it ready
-and merge; the lint outcome (ran and passed / no linter found); and the docs outcome (updated /
-already up to date).
+and merge; the lint outcome (ran and passed / no linter found); the docs outcome (updated / already
+up to date); and **which item the PR references**, or that it references none and why.

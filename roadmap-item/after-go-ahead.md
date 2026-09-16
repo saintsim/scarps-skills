@@ -1,8 +1,11 @@
-# roadmap-item — after the go-ahead
+# roadmap-item — after the go-ahead, on the **Open-Road markdown** flow
 
-Part of the `roadmap-item` skill, read on the user's go-ahead at Gate 2 (or straight away when the
-opening message waived the gate). Section numbers and `§` references continue from `SKILL.md`; the
-resolution, conventions and shared-checkout rules there still apply.
+**This file is the markdown flow only.** It is read on the user's go-ahead at Gate 2 (or straight
+away when the opening message waived the gate) after `markdown.md`, and its section numbers and `§`
+references continue from **`markdown.md`**. A roadmap kept as GitHub Issues never reaches this
+file — that flow finishes in `issues.md` §9 — which matters because the two differ on intent: the
+ban on writing `now` at pick-up below is the markdown flow's rule, and the issues flow deliberately
+does the opposite. The resolution, conventions and shared-checkout rules still apply.
 
 ## 8. On the go-ahead — review, ship, then the roadmap
 
@@ -74,6 +77,12 @@ Make these edits **together**:
 
 Those are the **only** `intent` edits in the run — never flip an item to `now` at pick-up. `intent` is
 hand-owned, never inferred from a green build, a merged PR or a passing review.
+
+**On the issues flow this one line reads the other way**, and the difference is deliberate rather
+than an oversight: `issues.md` §4 writes `intent:now` at pick-up, because there the label is what
+tells a phone that the item is being worked now. Here intent lives in a markdown item edited through
+a paired Open-Road pull request the owner merges, so a pick-up cannot write it without opening one.
+If you are reading this while working an item on GitHub Issues, you are in the wrong file.
 
 ### Check it mechanically
 
