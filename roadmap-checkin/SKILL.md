@@ -120,6 +120,13 @@ when `/rc` is off, so its absence reliably means "not reachable".
 Timestamp UTC ISO 8601 to the minute (`date -u +%Y-%m-%dT%H:%MZ`). Marker, yaml fence and keys
 **verbatim** — Sidebar parses them.
 
+**A start with no `session:` value is never posted, on either surface.** The phone drops it whole
+(`IssueParsing.swift` guards `surface` and a non-empty `session` strictly), so it would be no mark
+wearing the appearance of one. If the id cannot be established — the Mac uuid is not discoverable,
+or a cloud session carries no `CLAUDE_CODE_REMOTE_SESSION_ID` and the harness supplied no URL —
+post nothing, add the two labels, and say so. That applies to every comment written from this file,
+including a teleport's second one and any printed for the user to post by hand.
+
 **The heading names the machine, not the author.** `claude.ai` for a web session, the hostname for
 a local one — the same words the board uses, so the comment reads the same on a phone and on the
 issue page. GitHub itself cannot help here: it attributes every issue and comment to whoever's token

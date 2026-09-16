@@ -70,11 +70,20 @@ state — before creating anything. If one plainly covers the request, do not cr
   `intent:next` here: sequencing what has not started is the owner's, via `/roadmap-edit`.
 
   The mechanical form of the test, for the messy middle — half-written work, "we should also do X"
-  while X is partly done, something started and abandoned: **have you already changed files in this
-  repo, in this session, that this item's *Scope* covers?** Yes is `now`. If that is still genuinely
-  unclear, **ask** — fold it into the same AskUserQuestion the next paragraph may already be
-  raising. Guessing `later` is the expensive error, because it drops all three marks in silence and
-  nothing downstream notices.
+  while X is partly done, something started and abandoned: **do the changes you have already made
+  implement part of this item's *Scope*?** Yes is `now`.
+
+  **It asks about the work, not the files**, and the difference is the whole of the rule above. A
+  session deep in #41 has been editing `GitHubClient.swift` all afternoon; asked to raise an item for
+  retry and backoff in the network layer, it has touched the file that item's *Scope* covers and has
+  implemented **none** of it — so `later`. Answering on file overlap instead would mint a false
+  `now`, with `in-progress` and a start comment claiming a machine holds work nobody is doing: the
+  original complaint inverted, and sticky, since `intent:now` survives delivery and only the owner
+  clears it.
+
+  If it is still genuinely unclear, **ask** — fold it into the same AskUserQuestion the next
+  paragraph may already be raising. Guessing `later` drops all three marks in silence; guessing
+  `now` invents a pick-up. Neither is the safe default, which is why the question is worth asking.
 - **Milestone** — none, unless the user names a phase (`Phase 0` … `Phase 4`).
 
 If *Why* or *Done when* cannot be written from what the user said, ask once, with one
@@ -97,8 +106,8 @@ gh label create intent:later --color 8b949e --description 'intent: later — que
 gh label create intent:idea --color fbca04 --description 'intent: idea — parked, hand-owned' 2>/dev/null || true
 ```
 
-On the `now` path, `in-progress` and `intent:now` are both about to be written by §5, and a label
-that does not exist fails the whole edit — so create those two as well:
+On the `now` path, `in-progress` and `intent:now` both go on at **creation** (§4), and a label that
+does not exist fails the **create** — so the item never gets made at all. Create those two as well:
 
 ```sh
 gh label create intent:now --color d93f0b --description 'intent: now — in hand, hand-owned' 2>/dev/null || true
@@ -113,13 +122,14 @@ cannot see.
 
 One `issue_write` (method `create`) with title, body and labels — or:
 
+**On the `now` path add `--label in-progress` to that same call.** It is one of the three marks, on
+at creation, with no follow-up edit to forget — and there is still only one create. Running a second
+command mints a second item.
+
 ```sh
+# ONE call. The label list is the only thing that varies between the three paths.
 gh issue create --title '<title>' --body-file <file> \
   --label roadmap --label intent:<now|later|idea> [--milestone '<phase>']
-
-# on the `now` path, `in-progress` goes on here too — one call, no follow-up edit to forget
-gh issue create --title '<title>' --body-file <file> \
-  --label roadmap --label intent:now --label in-progress [--milestone '<phase>']
 ```
 
 ## 5. If you are already on it, announce it
