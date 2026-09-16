@@ -94,15 +94,36 @@ and every comment on it to whoever's token posted, which is the owner's, on a Ma
 alike. **The start comment is the only place a surface or a host is ever recorded.** Nothing else on
 the issue can tell a phone that claude.ai has this one.
 
-- **Web** — `CLAUDE_CODE_ENTRYPOINT=remote` and `CLAUDE_CODE_REMOTE_SESSION_ID=cse_<id>`; the
-  session's URL is `https://claude.ai/code/session_<id>` with the same `<id>`. **Prefer the URL the
-  harness supplied** in your system prompt (an attribution line naming
-  `https://claude.ai/code/session_…`). Only if absent, derive it by replacing `cse_` with
-  `session_`, and say in the paragraph that the link was derived. `host: claude.ai`.
-- **Local (Mac)** — `CLAUDE_CODE_ENTRYPOINT` is `cli` or unset. `CLAUDE_CODE_SESSION_ID` is expected
-  to hold the transcript uuid — **not yet measured on a Mac**. If it is empty, take the newest
-  `*.jsonl` under `~/.claude/projects/` modified in the last minute, and say in the paragraph that
-  the uuid was inferred. `host` is `hostname -s`; `link` is `http://<host>.local:8787/session/<uuid>`.
+**Work out the surface first, and measure it — never assume.** Run this before writing anything:
+
+```sh
+uname -s                                    # Darwin = a Mac; anything else is not
+echo "${CLAUDE_CODE_REMOTE:-}"              # true on a cloud session
+echo "${CLAUDE_CODE_ENTRYPOINT:-}"          # remote, remote_mobile, cli, or unset
+```
+
+- **Web (claude.ai), when `CLAUDE_CODE_REMOTE` is `true` or `CLAUDE_CODE_ENTRYPOINT` *starts with*
+  `remote`.** Measured 2026-09-16 in a session opened from the iPhone app: `remote_mobile`, so
+  matching `remote` exactly misses it. `surface: web`, `host: claude.ai`. The session id is
+  `CLAUDE_CODE_REMOTE_SESSION_ID=cse_<id>` and the URL is `https://claude.ai/code/session_<id>` with
+  the same `<id>` — verified against a live session. **Prefer the URL the harness supplied** in your
+  system prompt (an attribution line naming `https://claude.ai/code/session_…`); only if absent,
+  derive it by replacing `cse_` with `session_`, and say in the paragraph that the link was derived.
+- **Local, only when `uname -s` is `Darwin`.** `surface: local`, `host` is `hostname -s`, `link` is
+  `http://<host>.local:8787/session/<uuid>`. The uuid is `CLAUDE_CODE_SESSION_ID`; if it is empty,
+  take the newest `*.jsonl` under `~/.claude/projects/` modified in the last minute and say in the
+  paragraph that the uuid was inferred. **If that finds nothing either — an ordinary state for a
+  session running for hours — write neither `session:` nor `link:`, and say in the paragraph that
+  the session could not be identified.** A made-up uuid is a link that fails; an absent key is
+  readable as "not known".
+- **Anything else: stop and ask.** Not a Mac and not a cloud session means the environment is one
+  nothing here has measured, and there are **exactly three** valid machine shapes — `claude.ai`, and
+  one per Mac. Guessing mints a fourth that the owner has never heard of and cannot get rid of.
+
+**`CLAUDE_CODE_SESSION_ID` is not evidence of a Mac.** It is populated on cloud sessions too
+(measured, same session as above), so a model that reads it as the local branch's signature writes
+`surface: local` with `host: vm` and a link to a machine that does not exist. `uname -s` is the
+test; nothing else is.
 
 **`host` is `hostname -s` verbatim** — never a friendly name, never with `.local` appended, never
 invented. A board keys the machine on that exact string, so one session writing `Simons-Mac-mini`
@@ -161,13 +182,13 @@ A local pick-up on a Mac with Remote Control on, which is the same shape plus on
 
 ````markdown
 <!-- sidebar:start -->
-**Started** on **mac-mini** · 2026-09-13T19:20Z
+**Started** on **Simons-Mac-mini** · 2026-09-13T19:20Z
 
 ```yaml
 surface: local
 session: 9f2c1e04-7a3b-4d51-8c6e-2b0f4a7d9e13
-link: http://mac-mini.local:8787/session/9f2c1e04-7a3b-4d51-8c6e-2b0f4a7d9e13
-host: mac-mini
+link: http://Simons-Mac-mini.local:8787/session/9f2c1e04-7a3b-4d51-8c6e-2b0f4a7d9e13
+host: Simons-Mac-mini
 remote_control: enabled
 ```
 
@@ -192,20 +213,33 @@ teleported it — **post a fresh start comment before continuing**, with `surfac
 where that one stopped. Do not edit the web comment: both pick-ups are true, in that order, and the
 latest is the one that says where the work is now.
 
-Then the labels, in **one** edit: everything the issue already carries, plus `in-progress`, plus
-`intent:now` with any other `intent:` label dropped so exactly one remains.
+Then the labels, in **one** edit. **Compose the target set from the labels you actually read** —
+everything the issue carries, minus any `intent:` label it carries, plus `in-progress` and
+`intent:now` — rather than sending a blind delta:
 
 ```sh
 gh issue edit <N> --add-label in-progress,intent:now \
-  --remove-label intent:next,intent:later,intent:idea
+  --remove-label <only the intent: labels this issue actually has>
 ```
 
-On the web, `issue_write` takes the whole label list, so compose it from the labels read in §1
-rather than sending a delta. **A missing label fails the entire edit**, so on a Mac create the two
-first if the repo lacks them (`gh label create in-progress …`, `gh label create intent:now …` — both
-no-ops when they exist); on the web, say which is missing and ask for it rather than dropping it and
-leaving a start comment nothing corroborates. An item already carrying `intent:now` needs no change
-to it; say so rather than claiming an edit.
+**Never name a label the issue does not carry.** `gh` resolves every name against the repo's label
+list, so one `--remove-label intent:idea` on a repo that never created `intent:idea` fails the whole
+command and **both marks are lost together** — the comment posted, the labels not, which is the
+original complaint with extra steps. On the web this is safe by construction: `issue_write` takes
+the whole label list, so build it from the labels read and send that.
+
+**A label that does not exist cannot be added either**, so create the two first on a Mac — both are
+no-ops when they are already there:
+
+```sh
+gh label create intent:now --color d93f0b --description 'intent: now — in hand, hand-owned' 2>/dev/null || true
+gh label create in-progress --color 0e8a16 --description 'a session has this item in hand' 2>/dev/null || true
+```
+
+The web MCP server has no label-create call: if the edit then fails for a missing label, **say which
+one and ask the user to add it** rather than dropping it and leaving a start comment nothing
+corroborates. An item already carrying `intent:now` needs no change to it; say so rather than
+claiming an edit.
 
 **Why `now`, when intent is hand-owned:** the hand is the one that just typed *work on #41*. The
 rule being kept is that intent is never read off the code — not from a green build, a merged PR, a
@@ -269,8 +303,9 @@ repeats; the skill does not restart.
 
 1. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
    shortcut the loop. Anything it defers goes into the Delivered comment, not silently away.
-2. **`/ship`** — re-lints, updates docs, commits, pushes and opens the **draft** PR, titled
-   `Sidebar: #41 — <what it does>`. The body carries **`Refs #41`** — **never `Closes`, `Fixes` or
+2. **`/ship`** — re-lints, updates docs, commits, pushes and opens the **draft** PR. `/ship` §8
+   owns the title (it mirrors the commit subject); do not impose one here, and never a hardcoded
+   project prefix — `Sidebar:` is that repo's convention, not every repo's. The body carries **`Refs #41`** — **never `Closes`, `Fixes` or
    `Resolves`**: a merge must not close an issue; that is automation writing intent. Capture the URL.
 3. **The Delivered comment** — what the roadmap PR used to carry. The body is not rewritten.
 

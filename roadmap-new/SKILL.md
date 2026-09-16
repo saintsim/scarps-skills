@@ -2,7 +2,7 @@
 name: roadmap-new
 description: Create a new roadmap item as a GitHub Issue on the current code repo. Use when the user says "add an item", "new roadmap item", "raise an item for …", "park an idea", or describes work that belongs on the roadmap but has no issue yet. Searches for duplicates first, then sets the item's intent at creation — `intent:later` for work nobody has started, `intent:now` plus a start comment when this session is already building the thing the item describes.
 user-invocable: true
-allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, Skill, mcp__github__issue_read, mcp__github__issue_write, mcp__github__list_issues, mcp__github__search_issues
+allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, Skill, mcp__github__issue_read, mcp__github__issue_write, mcp__github__list_issues, mcp__github__search_issues, mcp__github__add_issue_comment, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
 
 An item is a GitHub Issue on the repo you are standing in (`git remote get-url origin`); the
@@ -18,8 +18,13 @@ gh issue list --state all --search '<key words from the request>' --limit 10
 ```
 
 Or `search_issues` with `repo:<owner>/<repo> <key words>`. **Show near matches** — number, title,
-state — before creating anything. If one plainly covers the request, offer `/roadmap-edit` on it
-instead and stop unless the user says otherwise.
+state — before creating anything. If one plainly covers the request, do not create a second item.
+
+- **If this session is already building the thing** (the `now` test in §2), the existing item is
+  exactly what `/roadmap-checkin` is for: invoke it with that issue number, so the work gets its
+  three marks. This is the commonest real case — the item was filed weeks ago and nobody ever marked
+  it — and stopping here instead would leave it showing as though nobody had started.
+- **Otherwise** offer `/roadmap-edit` on it and stop unless the user says otherwise.
 
 ## 2. Compose the issue
 
@@ -112,9 +117,17 @@ which is the whole of what a phone wants from it. Both halves or neither.
 
 So when §2 filed the item `intent:now`, invoke **`/roadmap-checkin`** with the new issue number
 (the **Skill** tool) and let it run to its report. It posts the start comment — surface, session,
-link, host, and a paragraph saying what is already built — and adds `in-progress`. It is the only
-writer of that comment on purpose: the shape is parsed by Sidebar, by SidePocket and by the skills
-here, and a second copy of it in this file would be a fourth place to forget.
+link, host, and a paragraph saying what is already built — adds `in-progress`, and confirms
+`intent:now`. It is the only writer of that comment on purpose: the shape is parsed by Sidebar, by
+SidePocket and by the skills here, and a second copy of it in this file would be a fourth place to
+forget.
+
+**If `/roadmap-checkin` is not available here, do not stop with the item half-marked.** Cloud
+installs are per-skill snapshots, so one skill present and its sibling absent is an ordinary state
+rather than an edge. In that case add `in-progress` yourself (the labels are already composed in
+§4), then **print the exact start comment for the user to post**, saying plainly that the item is
+`intent:now` and labelled but that nothing yet names the machine. An item announced by nothing is
+the "half a signal" this section exists to prevent, and silence about it is worse than the gap.
 
 **Nothing to do on the `later` and `idea` paths.** An item nobody has started gets no start comment
 and no `in-progress`, which is exactly what keeps a quiet board quiet.

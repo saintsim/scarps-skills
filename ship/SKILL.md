@@ -2,7 +2,7 @@
 name: ship
 description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Assumes code review is already done (does NOT run one). Never marks the PR ready for review and never merges — a human stays in the loop.
 user-invocable: true
-allowed-tools: Bash, Read, Grep, Glob, Edit
+allowed-tools: Bash, Read, Grep, Glob, Edit, mcp__github__issue_read, mcp__github__create_pull_request, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
 
 You are shipping the current changes to GitHub. **Review is assumed already done** (e.g. via
@@ -108,6 +108,13 @@ reference. Otherwise take the item from, in order:
 1. **The branch** — `<N>-<slug>` is issue `N`, `rm-NN-*` is the alias `RM-NN`. This is the
    convention, so it usually answers.
 2. **An id the user or the calling skill named** in this session.
+
+**This is the opposite order to `/roadmap-checkin`, deliberately.** That skill announces *a session*,
+so the id it was handed wins over whatever branch happens to be checked out. This one describes *a
+diff*, and the branch is the thing being shipped — a `Refs` naming an id from earlier in the
+conversation would attach this code to an item it does not implement. Where the two disagree — a
+branch `41-…` carrying work for a `#58` raised mid-session — **stop and ask**; that mismatch means
+the branch and the work have come apart, and neither skill should guess which is right.
 3. **A start comment you posted** for this work.
 
 **If none of those resolve it, ask** — one line, before opening the PR. Do not guess a number: a

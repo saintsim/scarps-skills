@@ -56,7 +56,7 @@ item writes exactly three things on the issue:
 | --- | --- |
 | **`<!-- sidebar:start -->` comment** | **which machine**, and how to reach it — `surface`, `session`, `link`, `host` |
 | **`in-progress` label** | **somebody has it**, making no claim about where |
-| **`intent:now` label** | **this is current work**, not queued work |
+| **`intent:now` label** | **this is current work**, not queued work — it goes on at pick-up and stays through delivery, so the owner's close is what settles it |
 
 The machine lives in `surface` and `host`, and there are exactly three shapes:
 
@@ -96,18 +96,20 @@ exists, a green build, a merged PR and a passing review say nothing about who is
 A code repo says where its roadmap lives with a `.roadmap` file at its root, and there are two
 kinds. **GitHub Issues on the code repo itself** (`kind: github-issues`) — the issue number is the
 id, intent is an `intent:` label or the closed state, `Depends on:` is a body line, and every
-pick-up leaves a **start comment** naming its surface (web or a Mac) with a link back, so a board
-such as Sidebar can show who has what in hand — and a session moved between the two, by
+pick-up leaves the **three marks** above — a start comment naming its surface (web or a Mac) with a
+link back, `in-progress`, and `intent:now` — so a board such as Sidebar or SidePocket can show who
+has what in hand — and a session moved between the two, by
 `claude --teleport` or otherwise, leaves a second one rather than editing the first, so the latest
 comment is always the machine the work is on now. Or **Open-Road markdown** — [Open-Road](https://github.com/saintsim/Open-Road)
 holds intent, one folder per project, and the pointer names the folder. `roadmap-item` reads the
 pointer and follows the matching flow; the three `roadmap-*` companions are issues-only.
 
 ```
-issues:   work on #41   → read issue + deps + CLAUDE.md → start comment + in-progress
+issues:   work on #41   → read issue + deps + CLAUDE.md
+                        → start comment + in-progress + intent:now   ← the three marks
                         → branch 41-<slug> → implement → build + test → STOP, you test
           (go-ahead)    → /review-loop → /ship (draft PR, Refs #41) → Delivered comment
-                        → in-progress off; the owner closes the issue
+                        → in-progress off; intent:now stays; the owner closes the issue
 
 markdown: work on RM-25 → resolve project (.roadmap, else repos:) → read item + conventions
                         → branch rm-25-<slug> → implement → build + test → STOP, you test
@@ -122,7 +124,10 @@ is how an existing bug report gets promoted into an item, or demoted back out.
 
 Ids are **per project**, not global — two projects can each carry an `RM-25`, and they're
 unrelated items — so the project is always resolved from the repo you're in. `intent` is
-hand-owned in both flows: no skill here infers it, and a PR body says `Refs #N`, never `Closes`.
+hand-owned in both flows, with exactly one exception: **`intent:now` at pick-up on the issues
+flow**, because being told *work on #41* is the owner saying the item is current. Nothing else is
+ever inferred — not from a green build, a merged PR or a passing review — and a PR body says
+`Refs #N`, never `Closes`.
 
 ### MoveIt feedback loop
 

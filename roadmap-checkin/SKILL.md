@@ -52,14 +52,36 @@ Read the repo, not memory — the paragraph is what a reader on another machine 
 
 ## 3. Post the start comment, then add `in-progress` and `intent:now`
 
-- **Web** — `CLAUDE_CODE_ENTRYPOINT=remote`, `CLAUDE_CODE_REMOTE_SESSION_ID=cse_<id>`; the session
-  URL is `https://claude.ai/code/session_<id>`. **Prefer the URL your system prompt supplied**
-  (an attribution line naming `https://claude.ai/code/session_…`); only if absent, replace `cse_`
-  with `session_` and say in the paragraph that the link was derived. `host: claude.ai`.
-- **Local (Mac)** — `CLAUDE_CODE_ENTRYPOINT` is `cli` or unset. `CLAUDE_CODE_SESSION_ID` is expected
-  to hold the transcript uuid — **not yet measured on a Mac**. If empty, take the newest `*.jsonl`
-  under `~/.claude/projects/` modified in the last minute and say the uuid was inferred.
-  `host` is `hostname -s`; `link` is `http://<host>.local:8787/session/<uuid>`.
+**Work out the surface first, and measure it — never assume.** Run this before writing anything:
+
+```sh
+uname -s                                    # Darwin = a Mac; anything else is not
+echo "${CLAUDE_CODE_REMOTE:-}"              # true on a cloud session
+echo "${CLAUDE_CODE_ENTRYPOINT:-}"          # remote, remote_mobile, cli, or unset
+```
+
+- **Web (claude.ai), when `CLAUDE_CODE_REMOTE` is `true` or `CLAUDE_CODE_ENTRYPOINT` *starts with*
+  `remote`.** Measured 2026-09-16 in a session opened from the iPhone app: `remote_mobile`, so
+  matching `remote` exactly misses it. `surface: web`, `host: claude.ai`. The session id is
+  `CLAUDE_CODE_REMOTE_SESSION_ID=cse_<id>` and the URL is `https://claude.ai/code/session_<id>` with
+  the same `<id>` — verified against a live session. **Prefer the URL the harness supplied** in your
+  system prompt (an attribution line naming `https://claude.ai/code/session_…`); only if absent,
+  derive it by replacing `cse_` with `session_`, and say in the paragraph that the link was derived.
+- **Local, only when `uname -s` is `Darwin`.** `surface: local`, `host` is `hostname -s`, `link` is
+  `http://<host>.local:8787/session/<uuid>`. The uuid is `CLAUDE_CODE_SESSION_ID`; if it is empty,
+  take the newest `*.jsonl` under `~/.claude/projects/` modified in the last minute and say in the
+  paragraph that the uuid was inferred. **If that finds nothing either — an ordinary state for a
+  session running for hours — write neither `session:` nor `link:`, and say in the paragraph that
+  the session could not be identified.** A made-up uuid is a link that fails; an absent key is
+  readable as "not known".
+- **Anything else: stop and ask.** Not a Mac and not a cloud session means the environment is one
+  nothing here has measured, and there are **exactly three** valid machine shapes — `claude.ai`, and
+  one per Mac. Guessing mints a fourth that the owner has never heard of and cannot get rid of.
+
+**`CLAUDE_CODE_SESSION_ID` is not evidence of a Mac.** It is populated on cloud sessions too
+(measured, same session as above), so a model that reads it as the local branch's signature writes
+`surface: local` with `host: vm` and a link to a machine that does not exist. `uname -s` is the
+test; nothing else is.
 
 **`host` is `hostname -s` verbatim** — never a friendly name, never with `.local` appended, never
 invented. A board keys the machine on that exact string, so one session writing `Simons-Mac-mini`
@@ -112,19 +134,39 @@ For local: `surface: local`, `session: <uuid>`, `link: http://<host>.local:8787/
 `host: <hostname>`. **Never edit an earlier start comment** — if one already exists, this is a
 resume and still posts a new one.
 
-Then the labels, in **one** edit: everything the issue already carries, plus `in-progress`, plus
-`intent:now` with any other `intent:` label dropped so exactly one remains.
+**`branch:` names the item's own branch, or is omitted entirely.** The example above carries one
+because a check-in usually happens mid-build. When the work is still on the default branch — which
+is the ordinary case for the `/roadmap-new` hand-off, since the item did not exist when the work
+started — **leave the key out**. Writing `branch: main` tells a board that `main` is the delivering
+branch, which is worse than saying nothing.
+
+Then the labels, in **one** edit. **Compose the target set from the labels you actually read** —
+everything the issue carries, minus any `intent:` label it carries, plus `in-progress` and
+`intent:now` — rather than sending a blind delta:
 
 ```sh
 gh issue edit <N> --add-label in-progress,intent:now \
-  --remove-label intent:next,intent:later,intent:idea
+  --remove-label <only the intent: labels this issue actually has>
 ```
 
-On the web, `issue_write` takes the whole label list, so compose it from the ones read in §1 rather
-than sending a delta. **A label that does not exist fails the entire edit**, so on a Mac create the
-two first — `gh label create in-progress …` and `gh label create intent:now …`, both no-ops when
-they are already there; on the web, say which is missing and ask for it, rather than dropping it and
-leaving a start comment the board cannot corroborate.
+**Never name a label the issue does not carry.** `gh` resolves every name against the repo's label
+list, so one `--remove-label intent:idea` on a repo that never created `intent:idea` fails the whole
+command and **both marks are lost together** — the comment posted, the labels not, which is the
+original complaint with extra steps. On the web this is safe by construction: `issue_write` takes
+the whole label list, so build it from the labels read and send that.
+
+**A label that does not exist cannot be added either**, so create the two first on a Mac — both are
+no-ops when they are already there:
+
+```sh
+gh label create intent:now --color d93f0b --description 'intent: now — in hand, hand-owned' 2>/dev/null || true
+gh label create in-progress --color 0e8a16 --description 'a session has this item in hand' 2>/dev/null || true
+```
+
+The web MCP server has no label-create call: if the edit then fails for a missing label, **say which
+one and ask the user to add it** rather than dropping it and leaving a start comment nothing
+corroborates. An item already carrying `intent:now` needs no change to it; say so rather than
+claiming an edit.
 
 **A session pulled down with `claude --teleport` is exactly what this skill is for.** The terminal
 gets its own copy of the session and new work there never reaches the cloud one again, so the web
