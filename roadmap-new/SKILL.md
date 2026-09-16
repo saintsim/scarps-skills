@@ -23,7 +23,9 @@ state — before creating anything. If one plainly covers the request, do not cr
 - **If this session is already building the thing** (the `now` test in §2), the existing item is
   exactly what `/roadmap-checkin` is for: invoke it with that issue number, so the work gets its
   three marks. This is the commonest real case — the item was filed weeks ago and nobody ever marked
-  it — and stopping here instead would leave it showing as though nobody had started.
+  it — and stopping here instead would leave it showing as though nobody had started. If
+  `/roadmap-checkin` is not installed, §5's fallback applies here too: add `in-progress` and
+  `intent:now` to the existing issue, and print the comment rather than improvising it.
 - **Otherwise** offer `/roadmap-edit` on it and stop unless the user says otherwise.
 
 ## 2. Compose the issue
@@ -66,6 +68,13 @@ state — before creating anything. If one plainly covers the request, do not cr
   **The `now` test is the work, not how busy the session is.** A session deep in #41 that raises an
   item for adjacent work it is **not** doing writes `later` like anyone else. And never
   `intent:next` here: sequencing what has not started is the owner's, via `/roadmap-edit`.
+
+  The mechanical form of the test, for the messy middle — half-written work, "we should also do X"
+  while X is partly done, something started and abandoned: **have you already changed files in this
+  repo, in this session, that this item's *Scope* covers?** Yes is `now`. If that is still genuinely
+  unclear, **ask** — fold it into the same AskUserQuestion the next paragraph may already be
+  raising. Guessing `later` is the expensive error, because it drops all three marks in silence and
+  nothing downstream notices.
 - **Milestone** — none, unless the user names a phase (`Phase 0` … `Phase 4`).
 
 If *Why* or *Done when* cannot be written from what the user said, ask once, with one
@@ -107,6 +116,10 @@ One `issue_write` (method `create`) with title, body and labels — or:
 ```sh
 gh issue create --title '<title>' --body-file <file> \
   --label roadmap --label intent:<now|later|idea> [--milestone '<phase>']
+
+# on the `now` path, `in-progress` goes on here too — one call, no follow-up edit to forget
+gh issue create --title '<title>' --body-file <file> \
+  --label roadmap --label intent:now --label in-progress [--milestone '<phase>']
 ```
 
 ## 5. If you are already on it, announce it
@@ -124,10 +137,16 @@ forget.
 
 **If `/roadmap-checkin` is not available here, do not stop with the item half-marked.** Cloud
 installs are per-skill snapshots, so one skill present and its sibling absent is an ordinary state
-rather than an edge. In that case add `in-progress` yourself (the labels are already composed in
-§4), then **print the exact start comment for the user to post**, saying plainly that the item is
-`intent:now` and labelled but that nothing yet names the machine. An item announced by nothing is
-the "half a signal" this section exists to prevent, and silence about it is worse than the gap.
+rather than an edge. Two of the three marks are already on from §4 (`intent:now` and
+`in-progress`), so what is missing is the comment.
+
+**Do not improvise it.** The shape is not written out in this file on purpose, and the fallback
+fires exactly when the file that holds it is absent — so read it from the repo checkout or
+`~/.claude/skills/roadmap-checkin/SKILL.md` if either is there, and **if neither is, say so and ask
+the user rather than writing an approximation.** A comment whose marker or keys are wrong is dropped
+by the phone in full: it is not a smaller mark, it is no mark that looks like one. Then print the
+exact comment for the user to post, saying plainly that the item is labelled but nothing yet names
+the machine.
 
 **Nothing to do on the `later` and `idea` paths.** An item nobody has started gets no start comment
 and no `in-progress`, which is exactly what keeps a quiet board quiet.

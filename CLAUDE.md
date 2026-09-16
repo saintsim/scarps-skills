@@ -15,8 +15,9 @@ construction.
 
 **A session working an item says so on the item, in three marks and nowhere else.** Before it writes
 code it posts the `<!-- sidebar:start -->` comment, adds `in-progress`, and sets `intent:now`.
-`/roadmap-item` and `/roadmap-checkin` write all three; a session that picked work up without either
-still owes them. The machine lives in the comment's `surface` and `host` and nowhere else —
+`/roadmap-item` and `/roadmap-checkin` write all three, and `/roadmap-new` writes them too when the
+item it is raising is work this session is already doing; a session that picked work up without any
+of them still owes them. The machine lives in the comment's `surface` and `host` and nowhere else —
 `claude.ai` for a cloud session, `hostname -s` verbatim for a Mac. Never GitHub's Assignee field: it
 holds a *user*, and every session posts with the owner's token, so it names the owner whichever
 machine did the work.
@@ -44,10 +45,11 @@ verbatim; the heading line and the paragraph under the block are prose and are n
   instruction, including the ones that fail: no `gh`, no MCP tools, a label that does not exist, a
   sibling skill not installed. "Print the exact text and ask the user to post it" is the house
   fallback — never skip a write silently.
-- **Detect, never assume.** `uname -s` says whether this is a Mac; `CLAUDE_CODE_REMOTE` and an
-  entrypoint *starting with* `remote` say whether it is a cloud session. `CLAUDE_CODE_SESSION_ID` is
-  populated on both, so it identifies nothing on its own. Where an environment matches neither, a
-  skill stops and asks rather than inventing a value.
+- **Detect, never assume.** Where a skill must know what machine it is on, it measures and takes
+  the first matching rule in a stated order, and stops and asks where nothing matches rather than
+  inventing a value. **The test itself lives in `roadmap-item/issues.md` §4 and
+  `roadmap-checkin/SKILL.md` §3, and only there** — it changes as the harness does, and a copy here
+  would be the one that rots.
 - **Examples get copied more reliably than rules get obeyed.** An example that contradicts the rule
   three paragraphs above it is a bug, not a typo. Keep worked examples consistent with the README.
 - **Say what was measured, and when.** A claim about an environment variable or a command's

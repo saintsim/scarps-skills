@@ -55,33 +55,45 @@ Read the repo, not memory — the paragraph is what a reader on another machine 
 **Work out the surface first, and measure it — never assume.** Run this before writing anything:
 
 ```sh
-uname -s                                    # Darwin = a Mac; anything else is not
-echo "${CLAUDE_CODE_REMOTE:-}"              # true on a cloud session
-echo "${CLAUDE_CODE_ENTRYPOINT:-}"          # remote, remote_mobile, cli, or unset
+uname -s                                    # Darwin = a Mac. First test, and it wins.
+echo "${CLAUDE_CODE_REMOTE:-}"              # true on a cloud (CCR) session
+echo "${CLAUDE_CODE_ENTRYPOINT:-}"          # remote, remote_mobile, cli, local-agent, or unset
 ```
 
-- **Web (claude.ai), when `CLAUDE_CODE_REMOTE` is `true` or `CLAUDE_CODE_ENTRYPOINT` *starts with*
-  `remote`.** Measured 2026-09-16 in a session opened from the iPhone app: `remote_mobile`, so
-  matching `remote` exactly misses it. `surface: web`, `host: claude.ai`. The session id is
-  `CLAUDE_CODE_REMOTE_SESSION_ID=cse_<id>` and the URL is `https://claude.ai/code/session_<id>` with
-  the same `<id>` — verified against a live session. **Prefer the URL the harness supplied** in your
-  system prompt (an attribution line naming `https://claude.ai/code/session_…`); only if absent,
-  derive it by replacing `cse_` with `session_`, and say in the paragraph that the link was derived.
-- **Local, only when `uname -s` is `Darwin`.** `surface: local`, `host` is `hostname -s`, `link` is
-  `http://<host>.local:8787/session/<uuid>`. The uuid is `CLAUDE_CODE_SESSION_ID`; if it is empty,
-  take the newest `*.jsonl` under `~/.claude/projects/` modified in the last minute and say in the
-  paragraph that the uuid was inferred. **If that finds nothing either — an ordinary state for a
-  session running for hours — write neither `session:` nor `link:`, and say in the paragraph that
-  the session could not be identified.** A made-up uuid is a link that fails; an absent key is
-  readable as "not known".
-- **Anything else: stop and ask.** Not a Mac and not a cloud session means the environment is one
-  nothing here has measured, and there are **exactly three** valid machine shapes — `claude.ai`, and
-  one per Mac. Guessing mints a fourth that the owner has never heard of and cannot get rid of.
+Take the **first** of these that matches. The order is load-bearing:
 
-**`CLAUDE_CODE_SESSION_ID` is not evidence of a Mac.** It is populated on cloud sessions too
-(measured, same session as above), so a model that reads it as the local branch's signature writes
-`surface: local` with `host: vm` and a link to a machine that does not exist. `uname -s` is the
-test; nothing else is.
+1. **`uname -s` is `Darwin` → `surface: local`.** Darwin decides, and nothing overrides it. A Mac is
+   a Mac whether the keyboard is in front of it, on a phone through Remote Control, or running a
+   self-hosted runner on that same machine — all three keep the work on the Mac, which is exactly
+   what the `/rc` rule below says. Testing the remote variables first would label the Mac mini
+   `claude.ai` on any of them.
+   `host` is `hostname -s`; `link` is `http://<host>.local:8787/session/<uuid>`. The uuid is
+   `CLAUDE_CODE_SESSION_ID`, or — when that is empty — the newest `*.jsonl` under
+   `~/.claude/projects/` modified in the last minute, saying in the paragraph that it was inferred.
+2. **`CLAUDE_CODE_REMOTE` is `true`, or `CLAUDE_CODE_ENTRYPOINT` *starts with* `remote` →
+   `surface: web`, `host: claude.ai`.** *Starts with*, not equals: the entrypoint names the client,
+   and measured 2026-09-16 from the iPhone app it is `remote_mobile`. `remote_desktop` and
+   `remote_trigger` are others. The session id is `CLAUDE_CODE_REMOTE_SESSION_ID=cse_<id>` and the
+   URL is `https://claude.ai/code/session_<id>` with the same `<id>` — verified against a live
+   session. **Prefer the URL the harness supplied** in your system prompt (an attribution line
+   naming `https://claude.ai/code/session_…`); only if absent, derive it by replacing `cse_` with
+   `session_`, and say in the paragraph that the link was derived.
+3. **Neither → stop and ask**, naming what a good answer is: which machine this is, spelled as its
+   own `hostname -s` gives it, or that it is a cloud session. There are **exactly three** shapes —
+   `claude.ai`, and one per Mac — so a Linux container, a devcontainer or CI is an environment
+   nothing here has measured, and guessing mints a fourth the owner never had and cannot remove.
+   Put the answer in the paragraph so the next session does not have to ask again.
+
+**`CLAUDE_CODE_SESSION_ID` identifies nothing on its own.** It is populated on cloud sessions as
+well as local ones (measured 2026-09-16), so a model reading it as the local branch's signature
+writes `surface: local` with `host: vm` and a link to a machine that does not exist.
+
+**If the uuid cannot be found on a Mac, do not post the comment at all.** The phone drops a start
+whose `session` is missing or empty: SidePocket's `IssueParsing.swift` guards `surface` and
+`session` strictly and every other key leniently, because half a start is a row claiming a session
+that may not exist. A comment written without it is not a weaker mark — it is **no mark, reported as
+posted**. Add `in-progress` and `intent:now`, then say plainly that the session could not be
+identified, so the item shows in hand with the machine unknown and the owner knows why.
 
 **`host` is `hostname -s` verbatim** — never a friendly name, never with `.local` appended, never
 invented. A board keys the machine on that exact string, so one session writing `Simons-Mac-mini`
@@ -144,16 +156,21 @@ Then the labels, in **one** edit. **Compose the target set from the labels you a
 everything the issue carries, minus any `intent:` label it carries, plus `in-progress` and
 `intent:now` — rather than sending a blind delta:
 
-```sh
-gh issue edit <N> --add-label in-progress,intent:now \
-  --remove-label <only the intent: labels this issue actually has>
+On a Mac, substitute the issue's own `intent:` labels into the remove list — and when it carries
+none, **drop the `--remove-label` flag entirely** rather than passing it an empty argument:
+
+```
+gh issue edit <N> --add-label in-progress,intent:now --remove-label intent:later
+gh issue edit <N> --add-label in-progress,intent:now            # carried no intent label
 ```
 
-**Never name a label the issue does not carry.** `gh` resolves every name against the repo's label
-list, so one `--remove-label intent:idea` on a repo that never created `intent:idea` fails the whole
-command and **both marks are lost together** — the comment posted, the labels not, which is the
-original complaint with extra steps. On the web this is safe by construction: `issue_write` takes
-the whole label list, so build it from the labels read and send that.
+**Never name a label the issue does not carry.** `gh` resolves label names against the repo's own
+list, so naming one the repo never created is expected to fail the whole command — and then **both
+marks are lost together**: the comment posted, the labels not, which is the original complaint with
+extra steps. (Expected, not measured — treat it as the reason for the shape rather than as an
+observation.) Composing from what you read is correct either way. On the web it is safe by
+construction: `issue_write` takes the whole label list, so build it from the labels read and send
+that.
 
 **A label that does not exist cannot be added either**, so create the two first on a Mac — both are
 no-ops when they are already there:

@@ -105,21 +105,21 @@ git branch --show-current
 No `.roadmap`, or no `kind: github-issues` line → this repo is not on issues; skip to §8 and write no
 reference. Otherwise take the item from, in order:
 
+**This is the opposite order to `/roadmap-checkin`, deliberately.** That skill announces *a
+session*, so the id it was handed wins over whatever branch is checked out. This one describes *a
+diff*, and the branch is the thing being shipped — a `Refs` naming an id from earlier in the
+conversation would attach this code to an item it does not implement.
+
 1. **The branch** — `<N>-<slug>` is issue `N`, `rm-NN-*` is the alias `RM-NN`. This is the
    convention, so it usually answers.
 2. **An id the user or the calling skill named** in this session.
-
-**This is the opposite order to `/roadmap-checkin`, deliberately.** That skill announces *a session*,
-so the id it was handed wins over whatever branch happens to be checked out. This one describes *a
-diff*, and the branch is the thing being shipped — a `Refs` naming an id from earlier in the
-conversation would attach this code to an item it does not implement. Where the two disagree — a
-branch `41-…` carrying work for a `#58` raised mid-session — **stop and ask**; that mismatch means
-the branch and the work have come apart, and neither skill should guess which is right.
 3. **A start comment you posted** for this work.
 
 **If none of those resolve it, ask** — one line, before opening the PR. Do not guess a number: a
 `Refs #39` pointing at the wrong item is worse than none, because it attaches this work to somebody
-else's on the board.
+else's on the board. **Where routes 1 and 2 disagree** — a branch `41-…` carrying work for a `#58`
+raised mid-session — ask as well: that mismatch means the branch and the work have come apart, and
+neither is reliably right.
 
 If the work genuinely has no item — a stray fix, a repo not on the roadmap — say so in the report and
 carry on without a reference.
