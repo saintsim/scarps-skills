@@ -18,10 +18,12 @@ re-explain each time.
 ## Touch points
 
 Two **planned** stops: **Gate 1** before building, only if the item is too thin to build from; and
-**Gate 2** after building, so the user can test. Beyond those, stop only where a step says stop —
-otherwise run unattended: don't ask permission to read, comment, branch, implement, or fix your own
-build breaks. If the opening message waives the second gate — "don't wait for me to test", "go all
-the way through", or equivalent — **skip Gate 2**: say so at the start and run §8 straight into §9.
+**Gate 2** after building, so the user can test. Neither comes before §2: the pick-up is announced
+on the issue first, so even a run that stops at Gate 1 is visible on the board. Beyond those two,
+stop only where a step says stop — otherwise run unattended: don't ask permission to read,
+comment, branch, implement, or fix your own build breaks. If the opening message waives the second
+gate — "don't wait for me to test", "go all the way through", or equivalent — **skip Gate 2**: say
+so at the start and run §8 straight into §9.
 
 ---
 
@@ -51,38 +53,26 @@ which adds the label).
 
 **Blocked check.** The first body line matching `Depends on: #12, #15` is the dependency list. Read
 **each** dependency's state: any still open means the item is blocked — name the blocker and ask
-whether to proceed. One closed as *not planned* was dropped, not done; ask about that too.
+whether to proceed. One closed as *not planned* was dropped, not done; ask about that too. This is
+the **one** question that comes before §2, because a blocked item may not be picked up at all:
+if the answer is no, nothing is posted and nothing is labelled.
 
 **Still unclear? Ask** — say what you tried, what you found, and your best guess. A wrong resolution
 is silent: nothing downstream catches it.
 
-## 2. Read before you build
+**Read the issue's existing comments while you are here** — an earlier start comment means this is a
+**resume** (see *Resuming*). That changes the paragraph §2 writes, never whether §2 runs.
 
-1. **The issue body** — the requirement. Items record decisions already taken, so they aren't
-   re-derived. Some ask for a **measurement to be re-run before building** — do that first and keep
-   the result for the Delivered comment. Read the comments too: an earlier start comment means
-   *Resuming* applies.
-2. **Its dependencies** — each `Depends on:` issue, for what they settled.
-3. **The code repo's own `CLAUDE.md`** — build, test, lint and review discipline. It is the
-   authority; obey it rather than restating it.
-4. **The build spec**, when the item cites a `§`: `Open-Road/Sidebar/specs/` in a sibling checkout
-   (`$OPEN_ROAD_DIR`, else `../Open-Road`), read with `git show origin/<default-branch>:…`, never
-   from its working tree. Keep `§` citations exact.
+## 2. Announce the pick-up — start comment and `in-progress`, before anything else
 
-## 3. Gate 1 — ask if the item is too thin
+**Do this the moment §1 has resolved the issue — before reading the body in depth, before Gate 1,
+before branching, before a line of code.** It is the same comment `/roadmap-checkin` posts on its
+own, and it is what tells the board, and anyone on another machine, that the item is in hand. A
+pick-up that stalls at Gate 1, runs long, or is abandoned half-read still has to be visible, so
+nothing else comes first: not the dependencies' bodies, not the spec, not Gate 1's questions. The
+only thing ahead of it is §1's blocked check, which decides whether there is a pick-up at all.
 
-The issue is the requirement. If it does not determine what to build, **ask before writing code**:
-behaviour at the edges, on failure, or as the user sees it is unstated; two readings diverge
-materially; a decision is deferred with no default and no decider; *Done when* isn't checkable; or
-it conflicts with the spec, a dependency, or the existing code. Do **not** ask about routine
-judgement — naming, file layout, which helper to reuse, test structure; make those calls and note
-them. When you do ask, put **every** question in one **AskUserQuestion** call with concrete options,
-then continue without further checkpoints.
-
-## 4. Post the start comment and add `in-progress` — before branching
-
-The durable "started" mark, readable from any machine and from the web. Post it **before** you
-branch, so the pick-up is visible even if nothing is ever pushed.
+The durable "started" mark, readable from any machine and from the web.
 
 - **Web** — `CLAUDE_CODE_ENTRYPOINT=remote` and `CLAUDE_CODE_REMOTE_SESSION_ID=cse_<id>`; the
   session's URL is `https://claude.ai/code/session_<id>` with the same `<id>`. **Prefer the URL the
@@ -169,6 +159,28 @@ latest is the one that says where the work is now.
 Then add the label (`issue_write` with `labels` = the existing labels plus `in-progress`, or
 `gh issue edit <N> --add-label in-progress`) and capture the comment URL for the report.
 
+## 3. Read before you build
+
+1. **The issue body** — the requirement. Items record decisions already taken, so they aren't
+   re-derived. Some ask for a **measurement to be re-run before building** — do that first and keep
+   the result for the Delivered comment.
+2. **Its dependencies** — each `Depends on:` issue, for what they settled.
+3. **The code repo's own `CLAUDE.md`** — build, test, lint and review discipline. It is the
+   authority; obey it rather than restating it.
+4. **The build spec**, when the item cites a `§`: `Open-Road/Sidebar/specs/` in a sibling checkout
+   (`$OPEN_ROAD_DIR`, else `../Open-Road`), read with `git show origin/<default-branch>:…`, never
+   from its working tree. Keep `§` citations exact.
+
+## 4. Gate 1 — ask if the item is too thin
+
+The issue is the requirement. If it does not determine what to build, **ask before writing code**:
+behaviour at the edges, on failure, or as the user sees it is unstated; two readings diverge
+materially; a decision is deferred with no default and no decider; *Done when* isn't checkable; or
+it conflicts with the spec, a dependency, or the existing code. Do **not** ask about routine
+judgement — naming, file layout, which helper to reuse, test structure; make those calls and note
+them. When you do ask, put **every** question in one **AskUserQuestion** call with concrete options,
+then continue without further checkpoints.
+
 ## 5. Branch off the fresh default branch — never commit to it directly
 
 ```sh
@@ -241,14 +253,17 @@ repeats; the skill does not restart.
    and its ordering, never a cause you didn't observe**.
 4. **Remove `in-progress`** (`issue_write` with the label omitted, or `gh issue edit <N>
    --remove-label in-progress`) — **only if the latest start comment on the issue is yours.** If
-   another session has started since, it holds the item now; leave the label and say so. **Do not close the issue and do not touch any `intent:` label.**
-   The owner reads the comment, merges the PR, and closes the issue — one actor.
+   another session has started since, it holds the item now; leave the label and say so. **Do not
+   close the issue and do not touch any `intent:` label.** The owner reads the comment, merges the
+   PR, and then runs **`/roadmap-done`**, which closes the issue only once the PR is actually
+   merged — one actor, one decision.
 
 ## Final report
 
 The item and what shipped; the branch and **draft PR URL**; the verification actually run, with
 results; the review-loop verdict; the start and Delivered comment URLs; anything deferred or out of
-scope; and that **the PR is a draft and the issue stays open until the owner closes it**. Then
+scope; and that **the PR is a draft and the issue stays open until the owner merges it and runs
+`/roadmap-done`**. Then
 **name the item you would pick up next and why** — one line, from open issues whose dependencies
 are all closed as completed — and say plainly that **the owner applies `intent:next` themselves**
 (one word to `/roadmap-edit`); this skill does not.
@@ -259,6 +274,6 @@ If a branch `<N>-*` or `rm-NN-*` for this item exists, locally or on the remote,
 Work out where it got to — `git log`, `git status`, `gh pr list --head <branch>` or
 `list_pull_requests`, the issue's comments — say so, and rejoin: still implementing, waiting at
 Gate 2, reviewed but unshipped, or shipped with the Delivered comment outstanding. **A resume is a
-pick-up: post a new start comment (§4) with `branch:` set and the paragraph stating the real state**,
+pick-up: post a new start comment (§2) with `branch:` set and the paragraph stating the real state**,
 and make sure `in-progress` is on. Never edit the earlier comment. Past Gate 2, pick up at the
 matching step of §9.
