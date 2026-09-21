@@ -23,8 +23,27 @@ holds a *user*, and every session posts with the owner's token, so it names the 
 machine did the work.
 
 `intent:now` is the one intent a skill writes, and only at pick-up — it records the instruction
-*work on this*. `next`, `later`, `idea` and both closed states are hand-owned, never inferred from a
-green build, a merged PR or a passing review.
+*work on this*. `next`, `later` and `idea` are hand-owned, never inferred from a green build, a
+merged PR or a passing review.
+
+**The close is the fourth mark, and `/roadmap-done` is the only skill that writes it.** The owner
+runs it after merging; it proves from GitHub that the PR actually merged before closing the issue as
+*completed*, and refuses on an open, draft or closed-but-unmerged PR. Closing as *not planned* stays
+hand-owned, one explicit `/roadmap-edit`.
+
+**`intent:now` stays on through delivery, and `/roadmap-done` clears it at the close.** Until the
+close the item really is the current work; after it, a finished item claiming to be in hand is
+noise every `label:intent:now` search picks up. The **closed state is what says done** — a board
+reads the state — so there is no `intent:done`: a fifth value would duplicate the state, need
+creating in every repo these skills touch, and be wrong the first time the two disagreed. An open
+item with no intent is still a validation finding; a closed one is simply finished.
+
+**Ship before review.** `/roadmap-item` runs `/ship` first, so `/review-loop` reads the diff on a
+pushed **draft** PR rather than a working tree. **Each review round is committed and pushed as it
+ends**, once the round's checks pass — nothing is held back to the end, so a session that dies
+mid-loop loses nothing and the PR shows the rounds converging. A second `/ship` run is never how
+they get there — the PR already exists, and a plain push updates it; never an amend, rebase or
+force-push, which rewrites what the reviewer and the PR are both reading.
 
 ## The start comment is a contract shared with two other repos
 

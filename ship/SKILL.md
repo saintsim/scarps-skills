@@ -1,13 +1,19 @@
 ---
 name: ship
-description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Assumes code review is already done (does NOT run one). Never marks the PR ready for review and never merges — a human stays in the loop.
+description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Never runs a code review itself; in the roadmap loop it runs BEFORE /review-loop, so the reviewer reads a pushed draft PR. Never marks the PR ready for review and never merges — a human stays in the loop.
 user-invocable: true
 allowed-tools: Bash, Read, Grep, Glob, Edit, mcp__github__issue_read, mcp__github__create_pull_request, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
 
-You are shipping the current changes to GitHub. **Review is assumed already done** (e.g. via
-`/review-loop`) — do **not** run another code review here. Your job is: lint → docs → branch (if
-needed) → commit → push → open a **draft** PR, then hand back to the human.
+You are shipping the current changes to GitHub. Your job is: lint → docs → branch (if needed) →
+commit → push → open a **draft** PR, then hand back. **Never run a code review here** — that is
+`/review-loop`'s job, not this skill's, whichever side of it you are on.
+
+**Shipping comes before review in the roadmap loop.** `/roadmap-item` runs `/ship` first so the
+review has a pushed draft PR to read rather than a working tree; the review's own fixes are then
+committed and pushed onto the same branch, which updates the PR. That is why a draft PR is the
+output and never a ready-for-review one: it exists precisely so unreviewed code has somewhere safe
+and visible to live.
 
 The steps below assume the `gh` CLI; in an environment without it (e.g. remote/cloud sessions), do
 the same operations under the same rules with whatever GitHub tooling the environment provides.
@@ -124,7 +130,20 @@ neither is reliably right.
 If the work genuinely has no item — a stray fix, a repo not on the roadmap — say so in the report and
 carry on without a reference.
 
-### 8. Open a DRAFT pull request
+### 8. Open a DRAFT pull request — or update the one this branch already has
+
+**Check first, because the loop reaches this step more than once:**
+
+```sh
+gh pr list --head "$(git branch --show-current)" --state open    # or list_pull_requests
+```
+
+An **open PR already on this branch** — the usual case when review fixes follow a first `/ship` — is
+the one to keep: the push in §6 has already updated it. Do not open a second, do not close and
+reopen it, and do not mark it ready. Refresh the body only if the change makes it wrong, say in the
+report that you updated an existing PR, and skip the rest of this step.
+
+Otherwise, open it:
 
 ```sh
 gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"

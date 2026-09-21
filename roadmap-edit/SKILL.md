@@ -53,7 +53,12 @@ conversation shows exactly what moved. Do not bundle an unrequested change into 
   open — then apply what the user said anyway; the owner's sequencing is not relitigated.
 - **Close** — `state: closed` with `state_reason: completed` (done) or `not_planned` (dropped), as
   the user said; `gh issue close N --reason completed|"not planned"`. Ask if the message does not
-  say which. **Reopen** only on instruction, likewise.
+  say which. **Reopen** only on instruction, likewise. Finishing a **delivered** item is normally
+  `/roadmap-done` instead — it proves the PR merged, records the evidence and clears the working
+  labels (`in-progress` and the `intent:` one); this skill's close is the blunt one, for an item
+  dropped as *not planned* or done outside a PR, and it checks nothing. It also **leaves the labels
+  where they are**, as every edit here does: ask for the intent label to come off too and that is
+  one more named edit, echoed like the rest.
 - **Milestone** — set or move to the named phase.
 - **Promote an ordinary issue to a roadmap item** — add the `roadmap` label, and an `intent:` one
   in the same edit, since an item with no intent is a validation finding. This is the supported way

@@ -94,8 +94,8 @@ Review dimensions (make these explicit in the reviewer's prompt):
   In Open-Road that means: exactly one item marked `next` (or the stated exception recorded);
   `intent` hand-owned, never inferred from a merged PR or green build; `blocked` derived, never
   declared — no item is `next` while a `depends_on` id isn't `done`; the README item table and its
-  closing prose agree with every item's frontmatter; a roadmap-done PR states its dependency on the
-  code PR that merges first.
+  closing prose agree with every item's frontmatter; a roadmap PR recording an item `done` states
+  its dependency on the code PR that merges first.
 - **Reference integrity** — no dangling `depends_on`, no dependency cycles, no broken links, no
   stale section citations, no reference to an item saying something the item doesn't say.
 - **Internal consistency** — the body agrees with its own frontmatter; two items don't claim the

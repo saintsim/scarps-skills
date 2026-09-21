@@ -200,14 +200,15 @@ Commit your work on the branch, then **stop** and report: the **item** (id, titl
 asked for) and **branch**; **what changed**, by file or area; **verification** — every command run and
 its actual result, and anything you couldn't run; **how to try it** — what to run, open, look at;
 **decisions and open points**, including anything left out of scope; and **what happens next** — that
-on their go-ahead you'll run `/review-loop`, then `/ship`, then prepare the Open-Road draft PR, and
-that "don't wait for me to test" runs straight through next time.
+on their go-ahead you'll run `/ship` to open the draft PR, then `/review-loop` over that PR, then
+prepare the Open-Road draft PR, and that "don't wait for me to test" runs straight through next
+time.
 
-Do **not** run `/review-loop`, `/ship`, or touch Open-Road yet — the evidence must describe the code
+Do **not** run `/ship`, `/review-loop`, or touch Open-Road yet — the evidence must describe the code
 that actually ships.
 
 **On the go-ahead, read `after-go-ahead.md` from this skill's own directory and follow it** — it
-carries §8 (review and ship), §9 (the Open-Road change) and the final report. If the user reports a
+carries §8 (ship then review), §9 (the Open-Road change) and the final report. If the user reports a
 problem instead, fix it on the same branch, re-verify, and hand back again — the gate repeats; the
 skill does not restart.
 

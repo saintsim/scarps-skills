@@ -10,15 +10,16 @@ every project picks the skills up automatically.
 
 | Skill | Invoke | What it does |
 | --- | --- | --- |
-| [`roadmap-item`](roadmap-item/SKILL.md) | `work on #41` / `work on RM-25` / `/roadmap-item #41` | Picks up a roadmap item by bare id and builds it in whichever code repo you're standing in. Reads the repo's `.roadmap` and follows one of two flows: **`kind: github-issues`** ([`issues.md`](roadmap-item/issues.md)) — the item is an issue on the code repo, a migrated one also answers to its old `RM-NN` alias, and the skill **posts a start comment, adds `in-progress` and sets `intent:now` before branching**, so the pick-up is visible from any machine and the board stops drawing work-in-hand as queued; or **Open-Road markdown** ([`markdown.md`](roadmap-item/markdown.md)) — resolves the project from the pointer (or a companion repo's remote against each item's `repos:`). Either way: read the item and its authorities, ask only if the item is too thin, branch off the freshly fetched default branch, implement, **build and run the unit tests**, stop for you to test. On your go-ahead: `/review-loop` → `/ship` (draft PR, `Refs #N`) → a **Delivered comment** on the issue (issues flow) or a paired **draft** Open-Road PR (markdown flow). `intent:now` at pick-up is the only intent it writes — *work on #41* is the owner saying the item is current — and it never writes `next`, `later` or `idea`, and never closes an issue. Say "don't wait for me to test" to run straight through. |
+| [`roadmap-item`](roadmap-item/SKILL.md) | `work on #41` / `work on RM-25` / `/roadmap-item #41` | Picks up a roadmap item by bare id and builds it in whichever code repo you're standing in. Reads the repo's `.roadmap` and follows one of two flows: **`kind: github-issues`** ([`issues.md`](roadmap-item/issues.md)) — the item is an issue on the code repo, a migrated one also answers to its old `RM-NN` alias, and the skill **posts a start comment, adds `in-progress` and sets `intent:now` the moment the item resolves** — before reading it in depth, before any question and before branching — so the pick-up is visible from any machine within its first minute and the board stops drawing work-in-hand as queued; or **Open-Road markdown** ([`markdown.md`](roadmap-item/markdown.md)) — resolves the project from the pointer (or a companion repo's remote against each item's `repos:`). Either way: read the item and its authorities, ask only if the item is too thin, branch off the freshly fetched default branch, implement, **build and run the unit tests**, stop for you to test. On your go-ahead: `/ship` (draft PR, `Refs #N`) → `/review-loop` over that PR, each round committed and pushed to the same branch as it ends → a **Delivered comment** on the issue (issues flow) or a paired **draft** Open-Road PR (markdown flow). `intent:now` at pick-up is the only intent it writes — *work on #41* is the owner saying the item is current — and it never writes `next`, `later` or `idea`, and never closes an issue — `/roadmap-done` does that once you have merged the PR. Say "don't wait for me to test" to run straight through. |
 | [`roadmap-checkin`](roadmap-checkin/SKILL.md) | `/roadmap-checkin` | For a session **already mid-way through an item** that never announced itself — a pick-up from before the roadmap moved to issues, one made by hand, or one **teleported down from the web**, where the issue still names claude.ai as the machine and links to a copy that has stopped moving. Works out the issue (an id you were given first, then the branch, then asks), gathers the real state from git and any PR, posts the start comment with that state, adds `in-progress` and sets `intent:now`. Builds nothing. |
 | [`roadmap-new`](roadmap-new/SKILL.md) | `/roadmap-new` | Creates a roadmap item as an issue on the current code repo: searches for duplicates first, composes *Why / Scope / Done when* with a `Depends on:` line only when there are dependencies, and labels it `roadmap` plus an intent set from what is actually happening: **`intent:now` when this session is already building the thing the item describes**, and it then hands off to `/roadmap-checkin` to post the start comment and add `in-progress`; `intent:idea` when you say park it; `intent:later` otherwise. Raising an item for work already under way no longer files it as though nobody had started. |
 | [`roadmap-edit`](roadmap-edit/SKILL.md) | `/roadmap-edit` | Changes one item exactly as you instruct — retitle, rewrite a section, change `Depends on:`, set intent (`make #41 next`), close as done or not planned. One named edit per change, echoed back. Intent is never inferred from a merged PR, a green build or a Delivered comment. |
-| [`review-loop`](review-loop/SKILL.md) | `/review-loop [scope]` | Loops an **independent Fable sub-agent** code review + fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same Fable sub-agent re-reviews; repeat until clean. Findings too big to fix now are **recorded, never silently ignored** — as a `deferred`-labelled issue on the repo where the roadmap is its own issues (promotion to an item is then one `/roadmap-edit`), else in the project's markdown deferred-review log wherever its conventions put it. Runs unattended. |
+| [`roadmap-done`](roadmap-done/SKILL.md) | `/roadmap-done` | Closes a delivered item — **after you have merged its PR**. Finds every PR that claims the item (the `Refs #N` search, the branch, the Delivered comment) and closes **only** on GitHub saying `merged: true`: an open PR, a draft, or one closed without merging closes nothing and gets reported instead. Then a closing comment carrying the merge commit and date, `state_reason: completed`, and the working labels off — `in-progress` and the `intent:` one, since the closed state is what says *done* and a finished item needs neither. Never adds an intent label, never merges anything, and names what it unblocked without promoting one. |
+| [`review-loop`](review-loop/SKILL.md) | `/review-loop [scope]` | Loops an **independent Fable sub-agent** code review + fix cycle until Fable judges the changes clean and good to ship. Usually run over an already-pushed **draft PR**, whose diff is the scope and whose branch each round's fixes are committed and pushed to as that round ends — so nothing is lost if the session dies, and the PR shows the loop converging. Fable reviews only; you fix every finding; the same Fable sub-agent re-reviews; repeat until clean. Findings too big to fix now are **recorded, never silently ignored** — as a `deferred`-labelled issue on the repo where the roadmap is its own issues (promotion to an item is then one `/roadmap-edit`), else in the project's markdown deferred-review log wherever its conventions put it. Runs unattended. |
 | [`plan-review`](plan-review/SKILL.md) | `/plan-review [scope]` | The plans counterpart of `review-loop`, for **intent-only repos** (e.g. Open-Road). Same independent Fable loop, but reviewing markdown plans against the repo's schema and conventions: frontmatter validity, repo invariants, dangling references, spec/item consistency, ambiguity an implementer would diverge on, sequencing, and evidence discipline. Owner-only fixes (intent, ordering, renumbering) are recorded, never made. Runs unattended. |
 | [`swift-verify`](swift-verify/SKILL.md) | `/swift-verify` | **Swift/Xcode projects, locally.** Runs the fixed ladder — **SwiftLint → `build` → `build-for-testing` → the unit (non-UI) tests** — fixing failures and re-running until green. Usual entry is straight after a `/teleport` from a web session, where nothing has been compiled by a real toolchain yet. Scheme, test targets and simulator are discovered at run time, and a repo that pins a particular runtime in its own docs gets honoured. Never gets green by weakening the check (no skipped, disabled or loosened tests), never commits, never launches the app. Records the run in `.git/swift-verify-state.json` so the UI skill can pick up from it. |
 | [`swift-verify-ui`](swift-verify-ui/SKILL.md) | `/swift-verify-ui` | The **UI-test** counterpart. Run it straight after `/swift-verify` and it runs **only the UI suites** — it checks the recorded run against `HEAD` plus a working-tree fingerprint, so an untouched tree skips the ladder and any edit since re-runs it. Pulls failure screenshots and the UI hierarchy out of the result bundle before theorising, distinguishes "the app is broken" from "the test is looking in the wrong place", names flakes instead of re-running until one passes, and re-runs the unit suites when a fix touched app code. |
-| [`ship`](ship/SKILL.md) | `/ship` | Ships the current changes on **GitHub** (assumes review is done). Re-lints if a linter exists, ensures repo docs are up to date, branches off the default branch, commits, pushes, and opens a **draft** PR with a title + description. On a repo whose roadmap is issues it resolves the item — from the branch, an id it was given, or a start comment it posted — and writes **`Refs #N`** in the body, never `Closes`; that line is the only thing attaching the PR to the item, since a board cannot ask GitHub which issue a PR is for. Never marks ready-for-review and never merges — human stays in the loop. |
+| [`ship`](ship/SKILL.md) | `/ship` | Ships the current changes on **GitHub**; in the roadmap loop it runs **before** `/review-loop`, so the review reads a pushed draft PR (it never reviews anything itself, and an existing PR on the branch is updated rather than duplicated). Re-lints if a linter exists, ensures repo docs are up to date, branches off the default branch, commits, pushes, and opens a **draft** PR with a title + description. On a repo whose roadmap is issues it resolves the item — from the branch, an id it was given, or a start comment it posted — and writes **`Refs #N`** in the body, never `Closes`; that line is the only thing attaching the PR to the item, since a board cannot ask GitHub which issue a PR is for. Never marks ready-for-review and never merges — human stays in the loop. |
 | [`move-raise-feedback`](move-raise-feedback/SKILL.md) | `/move-raise-feedback` | **MoveIt** — from a client repo (iOS/web-desk), composes the client's backend feedback and delivers it into the `MoveIt-API` inbox via a **draft PR**. |
 | [`move-apply-feedback`](move-apply-feedback/SKILL.md) | `/move-apply-feedback` | **MoveIt** — from a client repo, pulls the backend's latest reply, implements the changes it enables, updates the scoreboard, drafts a reply back. |
 | [`move-answer-feedback`](move-answer-feedback/SKILL.md) | `/move-answer-feedback` | **MoveIt** — from `MoveIt-API`, addresses the clients' inbound feedback and writes dated `backend-response-<client>` replies with a status table. |
@@ -102,18 +103,23 @@ has what in hand — and a session moved between the two, by
 `claude --teleport` or otherwise, leaves a second one rather than editing the first, so the latest
 comment is always the machine the work is on now. Or **Open-Road markdown** — [Open-Road](https://github.com/saintsim/Open-Road)
 holds intent, one folder per project, and the pointer names the folder. `roadmap-item` reads the
-pointer and follows the matching flow; the three `roadmap-*` companions are issues-only.
+pointer and follows the matching flow; the four `roadmap-*` companions — `checkin`, `new`, `edit`,
+`done` — are issues-only.
 
 ```
-issues:   work on #41   → read issue + deps + CLAUDE.md
-                        → start comment + in-progress + intent:now   ← the three marks
-                        → branch 41-<slug> → implement → build + test → STOP, you test
-          (go-ahead)    → /review-loop → /ship (draft PR, Refs #41) → Delivered comment
-                        → in-progress off; intent:now stays; the owner closes the issue
+issues:   work on #41   → resolve issue
+                        → start comment + in-progress + intent:now   ← the three marks, first
+                        → read issue + deps + CLAUDE.md → branch 41-<slug>
+                        → implement → build + test → STOP, you test
+          (go-ahead)    → /ship (draft PR, Refs #41) → /review-loop over that PR
+                        → each round committed + pushed → Delivered comment
+                        → in-progress off; intent:now stays; the issue stays open
+          you merge     → /roadmap-done → proves the merge → closed as completed
+                        → intent:now cleared; the state is what says done
 
 markdown: work on RM-25 → resolve project (.roadmap, else repos:) → read item + conventions
                         → branch rm-25-<slug> → implement → build + test → STOP, you test
-          (go-ahead)    → /review-loop → /ship (draft code PR)
+          (go-ahead)    → /ship (draft code PR) → /review-loop over that PR
                         → Open-Road draft PR: intent done, evidence, README row, next item
 ```
 
@@ -128,6 +134,13 @@ hand-owned in both flows, with exactly one exception: **`intent:now` at pick-up 
 flow**, because being told *work on #41* is the owner saying the item is current. Nothing else is
 ever inferred — not from a green build, a merged PR or a passing review — and a PR body says
 `Refs #N`, never `Closes`.
+
+**At the other end, the closed state is what says *done* — not a label.** `intent:now` stays on
+through delivery, and the close clears it: intent records what you mean to *do* with an item, and a
+closed one has nothing pending. There is no `intent:done`, deliberately — a fifth value would
+duplicate the state, need creating in every repo, and drift out of step with it the first time the
+two disagreed. That close is its own step, and yours: **`/roadmap-done`**, after you merge, and it
+refuses until GitHub says the PR merged.
 
 ### MoveIt feedback loop
 
@@ -169,6 +182,25 @@ Both symlink every skill directory in this repo into `~/.claude/skills/`, refres
 existing symlinks and leaving any real (non-symlink) entries untouched — they warn
 instead of clobbering them. Because they're symlinks, a `git pull` updates every
 installed skill with no reinstall.
+
+#### Let the loops push without asking
+
+`review-loop` commits and pushes **every round**, and it is meant to run unattended — but on a
+machine in the default permission mode each of those pushes stops for approval, so a six-round
+review waits for you six times. One allowlist entry, once per machine, fixes it for every project:
+
+```jsonc
+// ~/.claude/settings.json — user scope, so it applies in every repo
+{
+  "permissions": {
+    "allow": ["Bash(git push:*)", "Bash(git commit:*)"]
+  }
+}
+```
+
+Nothing here is widened by that beyond what the skills already do openly: they never force-push,
+never merge, never mark a PR ready, and only ever push the branch they are working on. Sessions
+already running in a permissive mode — cloud sessions usually are — need no change.
 
 ### Cloud sessions
 
