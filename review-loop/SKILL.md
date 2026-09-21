@@ -39,6 +39,11 @@ say which PR you are reviewing. Two rules follow from the code being pushed:
   mid-loop takes every unpushed round with it.
 - **Leave the PR a draft.** A clean verdict from the reviewer is not a human's approval, and this
   skill never marks a PR ready for review or merges one.
+- **If a push needs approval, the loop is not unattended any more.** Say so at the first round it
+  happens, keep going, and never report a round as pushed when it was not — the final report names
+  every commit still sitting unpushed. Worth telling the user once: one entry,
+  `"permissions": {"allow": ["Bash(git push:*)", "Bash(git commit:*)"]}` in `~/.claude/settings.json`,
+  and the rounds stop stopping.
 
 ## The loop
 

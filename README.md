@@ -183,6 +183,25 @@ existing symlinks and leaving any real (non-symlink) entries untouched — they 
 instead of clobbering them. Because they're symlinks, a `git pull` updates every
 installed skill with no reinstall.
 
+#### Let the loops push without asking
+
+`review-loop` commits and pushes **every round**, and it is meant to run unattended — but on a
+machine in the default permission mode each of those pushes stops for approval, so a six-round
+review waits for you six times. One allowlist entry, once per machine, fixes it for every project:
+
+```jsonc
+// ~/.claude/settings.json — user scope, so it applies in every repo
+{
+  "permissions": {
+    "allow": ["Bash(git push:*)", "Bash(git commit:*)"]
+  }
+}
+```
+
+Nothing here is widened by that beyond what the skills already do openly: they never force-push,
+never merge, never mark a PR ready, and only ever push the branch they are working on. Sessions
+already running in a permissive mode — cloud sessions usually are — need no change.
+
 ### Cloud sessions
 
 Cloud sessions run on a fresh VM that clones only the repo you're working in, so
