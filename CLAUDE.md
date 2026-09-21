@@ -39,9 +39,11 @@ creating in every repo these skills touch, and be wrong the first time the two d
 item with no intent is still a validation finding; a closed one is simply finished.
 
 **Ship before review.** `/roadmap-item` runs `/ship` first, so `/review-loop` reads the diff on a
-pushed **draft** PR rather than a working tree, and the review's own fixes are committed and pushed
-onto that branch. A second `/ship` run is never how they get there — the PR already exists, and a
-plain push updates it.
+pushed **draft** PR rather than a working tree. **Each review round is committed and pushed as it
+ends**, once the round's checks pass — nothing is held back to the end, so a session that dies
+mid-loop loses nothing and the PR shows the rounds converging. A second `/ship` run is never how
+they get there — the PR already exists, and a plain push updates it; never an amend, rebase or
+force-push, which rewrites what the reviewer and the PR are both reading.
 
 ## The start comment is a contract shared with two other repos
 

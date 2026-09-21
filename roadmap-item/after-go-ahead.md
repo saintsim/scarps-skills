@@ -17,9 +17,10 @@ that dies mid-review leaves the work pushed instead of stranded.
    prefixed with project and item, e.g. `<Project>: RM-25 — <what it does>`. **Capture the PR URL** —
    the roadmap PR must link it.
 2. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
-   shortcut the loop. Scope it at the PR's diff and give it the PR URL. **Every fix it makes has to
-   reach the PR**: commit on the same branch and push — never a second `/ship` run, which would try
-   to open a second PR — and leave the PR a **draft**. Anything it defers belongs in this project's
+   shortcut the loop. Scope it at the PR's diff and give it the PR URL. **Each round's fixes are
+   committed and pushed as that round ends**, never saved up for the end — a plain push on the same
+   branch, never a second `/ship` run, which would try to open a second PR — and the PR stays a
+   **draft**. Anything it defers belongs in this project's
    deferred log in Open-Road, not in the code repo — but **don't let it open a second roadmap PR**:
    have it report the entries rather than pushing them itself, and write them onto the roadmap
    branch in §9, which is already opening a PR against Open-Road for this item.

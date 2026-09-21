@@ -32,10 +32,11 @@ changed. Report the resolved scope before starting round 1.
 is the common case — review the **PR's own diff**, `git diff origin/<default-branch>...HEAD`, and
 say which PR you are reviewing. Two rules follow from the code being pushed:
 
-- **Every fix has to reach the PR.** Commit on the same branch and push (a plain `git push` updates
-  the PR) once the loop is clean and the mechanical checks pass. **Never run `/ship` to do it** — a
-  PR already exists and a second run would try to open another. A fix that only ever existed in a
-  working tree is a fix nobody reviewed and nobody merged.
+- **Every fix has to reach the PR, at the end of every round** — not once the loop goes clean.
+  Commit on the same branch and push; a plain `git push` updates the PR. **Never run `/ship` to do
+  it** — a PR already exists and a second run would try to open another. A fix that only ever
+  existed in a working tree is a fix nobody reviewed and nobody merged, and a session that dies
+  mid-loop takes every unpushed round with it.
 - **Leave the PR a draft.** A clean verdict from the reviewer is not a human's approval, and this
   skill never marks a PR ready for review or merges one.
 
@@ -138,6 +139,15 @@ Fix-introduced collateral is the number-one cause of extra rounds, so before sen
    and typecheck. If the build or tests fail, fix them before continuing. If part of the change
    cannot be compiled or run in this environment, say so explicitly to the reviewer and flag those
    areas for its hardest scrutiny. Do not create git hooks.
+4. **Commit the round and push it**, where the change is on a PR — **every round, before the
+   re-review**, so nothing is lost if the session dies and the PR shows the loop converging round by
+   round rather than arriving as one opaque commit. The checks in step 3 come first: a round that
+   does not build does not get pushed, it gets fixed. One commit per round, its subject naming the
+   round and what it fixed — `Second review round: fix a blocking fault the first round introduced`
+   is the shape — staged by path, never `git add -A`. A plain `git push`, always: **never amend,
+   rebase or force-push**, since the reviewer and the PR both read the history you are rewriting.
+   Note the pushed head, and tell the reviewer in the next step that its re-review is against a
+   pushed commit rather than a working tree.
 
 ### Each round — same Fable sub-agent re-reviews
 
@@ -145,6 +155,8 @@ Use **`SendMessage`** to the **same** Fable agent id (never a fresh Agent call �
 memory of the prior round). Tell it:
 - What you fixed, per prior finding — and remind it to **verify each claimed fix against the actual
   diff, not your description of it**.
+- The commit you just pushed for this round and the head sha, where the change is on a PR, so it
+  re-reviews what the PR actually carries.
 - What you deferred and why (with the tracked-file reference), and any finding you're contesting
   (phrased as a question for its ruling).
 - To re-review the fixes, confirm whether each prior finding is resolved, raise any new issues the
@@ -161,8 +173,9 @@ answer each round — the user cares whether the review is converging.
   (lint/typecheck/build/tests), and finish **without another review round**; report the nits and
   fixes in the final report. If fixing a nit needs a non-trivial change, that's not a nit — send it
   back for a real re-review.
-- **Push before you finish**, where the change is on a PR: the reviewed code belongs on the branch,
-  not in your working tree. Report the pushed head.
+- **Nothing is left unpushed**, where the change is on a PR: the last round's fixes — nits fixed
+  under `CLEAN_AFTER_NITS` included — are committed and pushed like every other round's, so the PR
+  and the clean verdict describe the same code. Report the final pushed head.
 - **Do not edit the reviewed code after the final verdict.** If something must change post-verdict,
   either keep it out of this ship or send it back to the reviewer — never ship unreviewed changes
   under a CLEAN flag.
@@ -247,6 +260,7 @@ When the loop converges (or hits the safety cap), report:
    landed in, and whether that write still needs its own PR.
 6. **UI polish** — any polish Fable suggested and whether you applied it.
 7. **Build/tests** — final status, and anything that could not be executed in this environment.
+8. **Pushed** — where the change is on a PR: the commit per round, the final head, and the PR URL.
 
 Do not claim "clean" unless Fable actually said so — report faithfully, including any deferrals or a
 hit safety cap.

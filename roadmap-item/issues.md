@@ -351,12 +351,12 @@ loop is clean, and nobody merges a draft.
    `Resolves`**: a merge must not close an issue; that is automation writing intent. Capture the URL.
 2. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
    shortcut the loop. Scope it at the PR's own diff (`git diff origin/<default-branch>...HEAD`), and
-   tell it the PR URL so its findings and the PR agree. **Every fix it makes has to reach the PR** —
-   commit them on the same branch and push, so the PR carries the reviewed code rather than a
-   working tree nobody can see; re-run the repo's lint and tests before that push. Do not run
-   `/ship` a second time to do it: the PR exists, and a plain `git push` updates it. Anything the
-   loop defers goes into the Delivered comment, not silently away. **Leave the PR a draft** — a
-   clean verdict is not a human's approval.
+   tell it the PR URL so its findings and the PR agree. **Each round's fixes are committed and
+   pushed as that round ends**, once the repo's lint and tests pass — not saved up for the end — so
+   nothing is lost if the session dies and the PR shows the loop converging. Do not run `/ship` a
+   second time to do it: the PR exists, and a plain `git push` updates it. Anything the loop defers
+   goes into the Delivered comment, not silently away. **Leave the PR a draft** — a clean verdict is
+   not a human's approval.
 3. **The Delivered comment** — what the roadmap PR used to carry, posted **after** the review's
    fixes are pushed so the evidence describes the PR's final head. The body is not rewritten.
 
