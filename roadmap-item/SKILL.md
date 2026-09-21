@@ -17,7 +17,9 @@ grep -E '^(repo|kind|path):' "$(git rev-parse --show-toplevel)/.roadmap"
 
 - **`kind: github-issues`** — the roadmap is the code repo's own issues: the issue number is the id,
   a migrated issue also answers to its old `RM-NN` id as a title alias, intent is a label or the
-  closed state, and a session posts a **start comment** at pick-up. Read **`issues.md`**.
+  closed state, and at pick-up a session posts a **start comment**, adds `in-progress` and sets
+  **`intent:now`** — the three marks a board such as Sidebar or SidePocket reads to say who has what
+  in hand, and on which machine. Read **`issues.md`**.
 - **No `kind:` line, or `kind: markdown`** — the roadmap is an
   [Open-Road](https://github.com/saintsim/Open-Road) folder of markdown items the pointer names.
   Read **`markdown.md`**, and on the go-ahead **`after-go-ahead.md`**.
@@ -26,7 +28,10 @@ grep -E '^(repo|kind|path):' "$(git rev-parse --show-toplevel)/.roadmap"
 
 Both flows share the same shape — resolve the item, read before you build, Gate 1 if the item is
 too thin, branch, implement, verify, Gate 2 for the user to test, then review, ship and record — and
-the same rules: **`intent` is hand-owned** and never written by this skill; PRs open as **drafts**;
+the same rules: **`intent` is hand-owned** — the only word either flow writes is `intent:now` at
+pick-up on the issues flow, because *work on #41* is the owner instructing that the item is current
+rather than anything read off the code, and the markdown flow writes no intent at pick-up at all;
+neither ever writes `next`, `later` or `idea`, or closes an item. PRs open as **drafts**;
 British English. What differs is where the item lives and how completion is recorded (a paired
 Open-Road PR for markdown; a Delivered comment on the issue for issues).
 
