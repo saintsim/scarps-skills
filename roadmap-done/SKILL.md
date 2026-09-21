@@ -1,6 +1,6 @@
 ---
 name: roadmap-done
-description: Close a roadmap item — a GitHub Issue on the current code repo — as done, once its pull request has actually merged. Use when the user says "#41 is done", "close RM-27", "the PR merged, finish it off", "mark it done" after shipping. Proves the merge from GitHub before closing, refuses on an open, draft or closed-but-unmerged PR, records the merge evidence in a closing comment, and takes `in-progress` off. Never writes an intent label and never merges anything itself.
+description: Close a roadmap item — a GitHub Issue on the current code repo — as done, once its pull request has actually merged. Use when the user says "#41 is done", "close RM-27", "the PR merged, finish it off", "mark it done" after shipping. Proves the merge from GitHub before closing, refuses on an open, draft or closed-but-unmerged PR, records the merge evidence in a closing comment, and takes `in-progress` off if it is still on. Leaves the item's `intent:` label exactly as it is — the closed state is what says done — and never merges anything itself.
 user-invocable: true
 allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, mcp__github__issue_read, mcp__github__issue_write, mcp__github__list_issues, mcp__github__search_issues, mcp__github__add_issue_comment, mcp__github__list_pull_requests, mcp__github__search_pull_requests, mcp__github__pull_request_read, mcp__github__get_commit
 ---
@@ -8,6 +8,10 @@ allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, mcp__github__issue_read,
 The last step of the loop, and the owner's to trigger: `/roadmap-item` ships a **draft** PR and
 leaves the issue open on purpose, because a PR body says `Refs #N` and never `Closes #N` — a merge
 must not write intent. Once the owner has merged it, this closes the item.
+
+**It is the one skill that closes an item as completed**, and it does so only when told to and only
+against a merge it has proved. Everything else about intent stays where it was: `/roadmap-item` and
+`/roadmap-checkin` write `intent:now` at pick-up, and nothing here rewrites it.
 
 **The one hard rule: prove the merge before closing.** A closed PR is not a merged PR, a draft is
 not a merged PR, and "the build was green" is not a merged PR. If the merge cannot be proved from
@@ -100,9 +104,19 @@ In this order, so the evidence lands even if a later call fails.
 3. **Remove `in-progress`** if it is on — `issue_write` with the label omitted from the list, or
    `gh issue edit <N> --remove-label in-progress`.
 
-**Never touch an `intent:` label**, in either direction. Closed-as-completed *is* the done state;
-an item's `intent:now|next|later|idea` is the owner's word about what they mean to do next and is
-not this skill's to rewrite, tidy or clear.
+**Never touch an `intent:` label**, in either direction — and expect the item to be carrying
+`intent:now`, because the pick-up put it there and delivery deliberately left it on. That is not
+untidiness to clean up on the way past:
+
+- **The closed state is what says *done*.** A board reads the state; a closed item is finished
+  whatever label it wears, which is why there is no `intent:done` and this skill does not invent
+  one. A fifth intent value would duplicate the state, have to be created in every repo the skills
+  touch, and be wrong the first time the two disagreed.
+- **Putting it back to `later` or `next` would be worse than leaving it**, since it files delivered
+  work behind work nobody has started, and the intent labels are the owner's word about what they
+  mean to do — never this skill's to rewrite, tidy or clear.
+
+If the owner wants a different label on a closed item, that is one explicit `/roadmap-edit`.
 
 ## 4. Say what it unblocked — report only, change nothing
 

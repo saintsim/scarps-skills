@@ -40,8 +40,14 @@ conversation shows exactly what moved. Do not bundle an unrequested change into 
   list, so compose it from the labels read; on a Mac:
 
   ```sh
-  gh issue edit N --add-label intent:next --remove-label intent:now,intent:later,intent:idea
+  gh issue edit N --add-label intent:next --remove-label intent:now        # the ones it HAS
+  gh issue edit N --add-label intent:next                                  # it had none
   ```
+
+  **Name only the `intent:` labels the issue actually carries**, and drop `--remove-label` when it
+  carries none. `gh` resolves label names against the repo's own list, so naming one the repo never
+  created is expected to fail the whole command — and *nothing* changes, silently, on the skill that
+  is also the documented way to repair a pick-up whose labels went wrong.
 
   For `next`, say if another open issue already carries `intent:next` or if a dependency is still
   open — then apply what the user said anyway; the owner's sequencing is not relitigated.

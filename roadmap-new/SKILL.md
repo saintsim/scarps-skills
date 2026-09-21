@@ -1,8 +1,8 @@
 ---
 name: roadmap-new
-description: Create a new roadmap item as a GitHub Issue on the current code repo. Use when the user says "add an item", "new roadmap item", "raise an item for …", "park an idea", or describes work that belongs on the roadmap but has no issue yet. Searches for duplicates first; the one skill that writes an intent label, and only at creation.
+description: Create a new roadmap item as a GitHub Issue on the current code repo. Use when the user says "add an item", "new roadmap item", "raise an item for …", "park an idea", or describes work that belongs on the roadmap but has no issue yet. Searches for duplicates first, then sets the item's intent at creation — `intent:later` for work nobody has started, `intent:now` plus a start comment when this session is already building the thing the item describes.
 user-invocable: true
-allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, mcp__github__issue_read, mcp__github__issue_write, mcp__github__list_issues, mcp__github__search_issues
+allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, Skill, mcp__github__issue_read, mcp__github__issue_write, mcp__github__list_issues, mcp__github__search_issues, mcp__github__add_issue_comment, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
 
 An item is a GitHub Issue on the repo you are standing in (`git remote get-url origin`); the
@@ -18,8 +18,15 @@ gh issue list --state all --search '<key words from the request>' --limit 10
 ```
 
 Or `search_issues` with `repo:<owner>/<repo> <key words>`. **Show near matches** — number, title,
-state — before creating anything. If one plainly covers the request, offer `/roadmap-edit` on it
-instead and stop unless the user says otherwise.
+state — before creating anything. If one plainly covers the request, do not create a second item.
+
+- **If this session is already building the thing** (the `now` test in §2), the existing item is
+  exactly what `/roadmap-checkin` is for: invoke it with that issue number, so the work gets its
+  three marks. This is the commonest real case — the item was filed weeks ago and nobody ever marked
+  it — and stopping here instead would leave it showing as though nobody had started. If
+  `/roadmap-checkin` is not installed, §5's fallback applies here too: add `in-progress` and
+  `intent:now` to the existing issue, and print the comment rather than improvising it.
+- **Otherwise** offer `/roadmap-edit` on it and stop unless the user says otherwise.
 
 ## 2. Compose the issue
 
@@ -47,11 +54,36 @@ instead and stop unless the user says otherwise.
 
 - **Labels** — **always `roadmap`**, plus an intent. The `roadmap` label is what makes an issue a
   roadmap item at all: most repos' trackers already hold ordinary bugs and features, and the board
-  reads only labelled issues, so an item created without it is invisible. Then `intent:later` **by
-  default**; `intent:idea` when the user says *park it*, *idea*,
-  *someday*, or equivalent. This is the one place a skill writes an intent label, because an open
-  issue with none is a validation finding and the user asked for the item in this message. Never
-  `intent:now` or `intent:next` here — those are the owner's, via `/roadmap-edit`.
+  reads only labelled issues, so an item created without it is invisible. An open issue with no
+  intent is a validation finding, so one is always written here; which one is the question.
+
+  - **`intent:now`** when this session is **already building the thing this item describes** — the
+    user asked for the work first and the item second, or said "raise an item for what you're
+    doing". Filing that as `later` is a claim the board then repeats to a phone: work being written
+    this minute, drawn in the queue nobody has started. §5 finishes the job by announcing it.
+  - **`intent:idea`** when the user says *park it*, *idea*, *someday*, or equivalent.
+  - **`intent:later`** otherwise, and it is the ordinary case — work noticed in passing, a bug
+    logged on the way past, anything nobody is on.
+
+  **The `now` test is the work, not how busy the session is.** A session deep in #41 that raises an
+  item for adjacent work it is **not** doing writes `later` like anyone else. And never
+  `intent:next` here: sequencing what has not started is the owner's, via `/roadmap-edit`.
+
+  The mechanical form of the test, for the messy middle — half-written work, "we should also do X"
+  while X is partly done, something started and abandoned: **do the changes you have already made
+  implement part of this item's *Scope*?** Yes is `now`.
+
+  **It asks about the work, not the files**, and the difference is the whole of the rule above. A
+  session deep in #41 has been editing `GitHubClient.swift` all afternoon; asked to raise an item for
+  retry and backoff in the network layer, it has touched the file that item's *Scope* covers and has
+  implemented **none** of it — so `later`. Answering on file overlap instead would mint a false
+  `now`, with `in-progress` and a start comment claiming a machine holds work nobody is doing: the
+  original complaint inverted, and sticky, since `intent:now` survives delivery and only the owner
+  clears it.
+
+  If it is still genuinely unclear, **ask** — fold it into the same AskUserQuestion the next
+  paragraph may already be raising. Guessing `later` drops all three marks in silence; guessing
+  `now` invents a pick-up. Neither is the safe default, which is why the question is worth asking.
 - **Milestone** — none, unless the user names a phase (`Phase 0` … `Phase 4`).
 
 If *Why* or *Done when* cannot be written from what the user said, ask once, with one
@@ -65,13 +97,21 @@ outright on a label that does not exist — so the item never gets made. Create 
 commands are no-ops when the label is already there.
 
 Create `roadmap` and **the intent label this item is about to carry** — `intent:idea` on the park-it
-path, `intent:later` otherwise. Ensuring only `later` leaves "park an idea" dying on a fresh repo,
-which is the same failure one step along.
+path, `intent:now` on the already-on-it path, `intent:later` otherwise. Ensuring only `later` leaves
+"park an idea" dying on a fresh repo, which is the same failure one step along.
 
 ```sh
 gh label create roadmap --color 5319e7 --description 'a roadmap item, not an ordinary issue' 2>/dev/null || true
 gh label create intent:later --color 8b949e --description 'intent: later — queued, hand-owned' 2>/dev/null || true
 gh label create intent:idea --color fbca04 --description 'intent: idea — parked, hand-owned' 2>/dev/null || true
+```
+
+On the `now` path, `in-progress` and `intent:now` both go on at **creation** (§4), and a label that
+does not exist fails the **create** — so the item never gets made at all. Create those two as well:
+
+```sh
+gh label create intent:now --color d93f0b --description 'intent: now — in hand, hand-owned' 2>/dev/null || true
+gh label create in-progress --color 0e8a16 --description 'a session has this item in hand' 2>/dev/null || true
 ```
 
 On the web the MCP server has no label-create call: if the create then fails for a missing label,
@@ -82,12 +122,48 @@ cannot see.
 
 One `issue_write` (method `create`) with title, body and labels — or:
 
+**On the `now` path add `--label in-progress` to that same call.** It is one of the three marks, on
+at creation, with no follow-up edit to forget — and there is still only one create. Running a second
+command mints a second item.
+
 ```sh
+# ONE call. The label list is the only thing that varies between the three paths.
 gh issue create --title '<title>' --body-file <file> \
-  --label roadmap --label intent:later [--milestone '<phase>']
+  --label roadmap --label intent:<now|later|idea> [--milestone '<phase>']
 ```
+
+## 5. If you are already on it, announce it
+
+An `intent:now` item with no start comment is half a signal. The board has been told the work is
+current and still cannot say that anybody holds it, on which machine, or how to reach that session —
+which is the whole of what a phone wants from it. Both halves or neither.
+
+So when §2 filed the item `intent:now`, invoke **`/roadmap-checkin`** with the new issue number
+(the **Skill** tool) and let it run to its report. It posts the start comment — surface, session,
+link, host, and a paragraph saying what is already built — adds `in-progress`, and confirms
+`intent:now`. It is the only writer of that comment on purpose: the shape is parsed by Sidebar, by
+SidePocket and by the skills here, and a second copy of it in this file would be a fourth place to
+forget.
+
+**If `/roadmap-checkin` is not available here, do not stop with the item half-marked.** Cloud
+installs are per-skill snapshots, so one skill present and its sibling absent is an ordinary state
+rather than an edge. Two of the three marks are already on from §4 (`intent:now` and
+`in-progress`), so what is missing is the comment.
+
+**Do not improvise it.** The shape is not written out in this file on purpose, and the fallback
+fires exactly when the file that holds it is absent — so read it from the repo checkout or
+`~/.claude/skills/roadmap-checkin/SKILL.md` if either is there, and **if neither is, say so and ask
+the user rather than writing an approximation.** A comment whose marker or keys are wrong is dropped
+by the phone in full: it is not a smaller mark, it is no mark that looks like one. Then print the
+exact comment for the user to post, saying plainly that the item is labelled but nothing yet names
+the machine.
+
+**Nothing to do on the `later` and `idea` paths.** An item nobody has started gets no start comment
+and no `in-progress`, which is exactly what keeps a quiet board quiet.
 
 ## Report
 
 The issue **number, title and URL**, the label set, the milestone if any, and the `Depends on:`
-line as written. Nothing else changes: no branch, no comment, no other issue.
+line as written. On the `now` path, also the start comment URL and that `in-progress` is on — and
+say which of the three intents it got and why, in one line, since that is the call the user is most
+likely to want to correct. Nothing else changes: no branch, no other issue.

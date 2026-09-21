@@ -28,6 +28,17 @@ From `$ARGUMENTS`:
 Run `git status` and `git branch --show-current` first so you know the branch and exactly what
 changed. Report the resolved scope before starting round 1.
 
+**When the work is already on a pull request** — the roadmap loop ships before it reviews, so this
+is the common case — review the **PR's own diff**, `git diff origin/<default-branch>...HEAD`, and
+say which PR you are reviewing. Two rules follow from the code being pushed:
+
+- **Every fix has to reach the PR.** Commit on the same branch and push (a plain `git push` updates
+  the PR) once the loop is clean and the mechanical checks pass. **Never run `/ship` to do it** — a
+  PR already exists and a second run would try to open another. A fix that only ever existed in a
+  working tree is a fix nobody reviewed and nobody merged.
+- **Leave the PR a draft.** A clean verdict from the reviewer is not a human's approval, and this
+  skill never marks a PR ready for review or merges one.
+
 ## The loop
 
 ### Round 1 — spawn the Fable reviewer
@@ -150,6 +161,8 @@ answer each round — the user cares whether the review is converging.
   (lint/typecheck/build/tests), and finish **without another review round**; report the nits and
   fixes in the final report. If fixing a nit needs a non-trivial change, that's not a nit — send it
   back for a real re-review.
+- **Push before you finish**, where the change is on a PR: the reviewed code belongs on the branch,
+  not in your working tree. Report the pushed head.
 - **Do not edit the reviewed code after the final verdict.** If something must change post-verdict,
   either keep it out of this ship or send it back to the reviewer — never ship unreviewed changes
   under a CLEAN flag.

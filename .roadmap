@@ -1,0 +1,18 @@
+# Where this repo's intent lives.
+#
+# The skills' own roadmap is this repo's GitHub Issues, the same arrangement
+# Sidebar, SidePocket and Afterwards moved to: the issue number is the item id,
+# intent is an `intent:` label or the closed state, and `Depends on:` is the
+# first body line. Nothing here was ever markdown, so no item carries an
+# `RM-NN` title alias — ids are bare numbers and branches are `<issue>-<slug>`.
+#
+# An issue is an item only if it carries the `roadmap` label; an unlabelled one
+# is deliberately invisible to the board.
+#
+# Why this file exists at all: without it every roadmap skill stops on sight
+# ("this repo is not on issues yet"), so work on the skills could never be
+# picked up as an item, never carry a start comment, and never appear on a
+# board. A session changing the skills was invisible by construction — which is
+# the failure this file closes.
+repo: saintsim/scarps-skills
+kind: github-issues

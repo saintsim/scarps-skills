@@ -1,19 +1,28 @@
-# roadmap-item — after the go-ahead
+# roadmap-item — after the go-ahead, on the **Open-Road markdown** flow
 
-Part of the `roadmap-item` skill, read on the user's go-ahead at Gate 2 (or straight away when the
-opening message waived the gate). Section numbers and `§` references continue from `SKILL.md`; the
-resolution, conventions and shared-checkout rules there still apply.
+**This file is the markdown flow only.** It is read on the user's go-ahead at Gate 2 (or straight
+away when the opening message waived the gate) after `markdown.md`, and its section numbers and `§`
+references continue from **`markdown.md`**. A roadmap kept as GitHub Issues never reaches this
+file — that flow finishes in `issues.md` §9 — which matters because the two differ on intent: the
+ban on writing `now` at pick-up below is the markdown flow's rule, and the issues flow deliberately
+does the opposite. The resolution, conventions and shared-checkout rules still apply.
 
-## 8. On the go-ahead — review, ship, then the roadmap
+## 8. On the go-ahead — ship, review, then the roadmap
 
-1. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
-   shortcut the loop. Anything it defers belongs in this project's deferred log in Open-Road, not in
-   the code repo — but **don't let it open a second roadmap PR**: have it report the entries rather
-   than pushing them itself, and write them onto the roadmap branch in §9, which is already opening a
-   PR against Open-Road for this item.
-2. **`/ship`** — it re-lints, updates docs, commits, pushes and opens the **draft** code PR. Title
+**`/ship` runs first, then `/review-loop`**, the same order as the issues flow and for the same
+reason: the review then reads the diff on a **draft** PR rather than a working tree, and a session
+that dies mid-review leaves the work pushed instead of stranded.
+
+1. **`/ship`** — it re-lints, updates docs, commits, pushes and opens the **draft** code PR. Title
    prefixed with project and item, e.g. `<Project>: RM-25 — <what it does>`. **Capture the PR URL** —
    the roadmap PR must link it.
+2. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
+   shortcut the loop. Scope it at the PR's diff and give it the PR URL. **Every fix it makes has to
+   reach the PR**: commit on the same branch and push — never a second `/ship` run, which would try
+   to open a second PR — and leave the PR a **draft**. Anything it defers belongs in this project's
+   deferred log in Open-Road, not in the code repo — but **don't let it open a second roadmap PR**:
+   have it report the entries rather than pushing them itself, and write them onto the roadmap
+   branch in §9, which is already opening a PR against Open-Road for this item.
 3. **The Open-Road change** — §9. Not optional: an item without its roadmap PR is unfinished.
 
 ## 9. The Open-Road change
@@ -74,6 +83,12 @@ Make these edits **together**:
 
 Those are the **only** `intent` edits in the run — never flip an item to `now` at pick-up. `intent` is
 hand-owned, never inferred from a green build, a merged PR or a passing review.
+
+**On the issues flow this one line reads the other way**, and the difference is deliberate rather
+than an oversight: `issues.md` §4 writes `intent:now` at pick-up, because there the label is what
+tells a phone that the item is being worked now. Here intent lives in a markdown item edited through
+a paired Open-Road pull request the owner merges, so a pick-up cannot write it without opening one.
+If you are reading this while working an item on GitHub Issues, you are in the wrong file.
 
 ### Check it mechanically
 
