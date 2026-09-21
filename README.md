@@ -14,7 +14,7 @@ every project picks the skills up automatically.
 | [`roadmap-checkin`](roadmap-checkin/SKILL.md) | `/roadmap-checkin` | For a session **already mid-way through an item** that never announced itself — a pick-up from before the roadmap moved to issues, one made by hand, or one **teleported down from the web**, where the issue still names claude.ai as the machine and links to a copy that has stopped moving. Works out the issue (an id you were given first, then the branch, then asks), gathers the real state from git and any PR, posts the start comment with that state, adds `in-progress` and sets `intent:now`. Builds nothing. |
 | [`roadmap-new`](roadmap-new/SKILL.md) | `/roadmap-new` | Creates a roadmap item as an issue on the current code repo: searches for duplicates first, composes *Why / Scope / Done when* with a `Depends on:` line only when there are dependencies, and labels it `roadmap` plus an intent set from what is actually happening: **`intent:now` when this session is already building the thing the item describes**, and it then hands off to `/roadmap-checkin` to post the start comment and add `in-progress`; `intent:idea` when you say park it; `intent:later` otherwise. Raising an item for work already under way no longer files it as though nobody had started. |
 | [`roadmap-edit`](roadmap-edit/SKILL.md) | `/roadmap-edit` | Changes one item exactly as you instruct — retitle, rewrite a section, change `Depends on:`, set intent (`make #41 next`), close as done or not planned. One named edit per change, echoed back. Intent is never inferred from a merged PR, a green build or a Delivered comment. |
-| [`roadmap-done`](roadmap-done/SKILL.md) | `/roadmap-done` | Closes a delivered item — **after you have merged its PR**. Finds every PR that claims the item (the `Refs #N` search, the branch, the Delivered comment) and closes **only** on GitHub saying `merged: true`: an open PR, a draft, or one closed without merging closes nothing and gets reported instead. Then a closing comment carrying the merge commit and date, `state_reason: completed`, and `in-progress` off. `intent:now` is left exactly as it is — the closed state is what says *done*. Never merges anything, and names what it unblocked without promoting one. |
+| [`roadmap-done`](roadmap-done/SKILL.md) | `/roadmap-done` | Closes a delivered item — **after you have merged its PR**. Finds every PR that claims the item (the `Refs #N` search, the branch, the Delivered comment) and closes **only** on GitHub saying `merged: true`: an open PR, a draft, or one closed without merging closes nothing and gets reported instead. Then a closing comment carrying the merge commit and date, `state_reason: completed`, and the working labels off — `in-progress` and the `intent:` one, since the closed state is what says *done* and a finished item needs neither. Never adds an intent label, never merges anything, and names what it unblocked without promoting one. |
 | [`review-loop`](review-loop/SKILL.md) | `/review-loop [scope]` | Loops an **independent Fable sub-agent** code review + fix cycle until Fable judges the changes clean and good to ship. Usually run over an already-pushed **draft PR**, whose diff is the scope and whose branch every fix is pushed to. Fable reviews only; you fix every finding; the same Fable sub-agent re-reviews; repeat until clean. Findings too big to fix now are **recorded, never silently ignored** — as a `deferred`-labelled issue on the repo where the roadmap is its own issues (promotion to an item is then one `/roadmap-edit`), else in the project's markdown deferred-review log wherever its conventions put it. Runs unattended. |
 | [`plan-review`](plan-review/SKILL.md) | `/plan-review [scope]` | The plans counterpart of `review-loop`, for **intent-only repos** (e.g. Open-Road). Same independent Fable loop, but reviewing markdown plans against the repo's schema and conventions: frontmatter validity, repo invariants, dangling references, spec/item consistency, ambiguity an implementer would diverge on, sequencing, and evidence discipline. Owner-only fixes (intent, ordering, renumbering) are recorded, never made. Runs unattended. |
 | [`swift-verify`](swift-verify/SKILL.md) | `/swift-verify` | **Swift/Xcode projects, locally.** Runs the fixed ladder — **SwiftLint → `build` → `build-for-testing` → the unit (non-UI) tests** — fixing failures and re-running until green. Usual entry is straight after a `/teleport` from a web session, where nothing has been compiled by a real toolchain yet. Scheme, test targets and simulator are discovered at run time, and a repo that pins a particular runtime in its own docs gets honoured. Never gets green by weakening the check (no skipped, disabled or loosened tests), never commits, never launches the app. Records the run in `.git/swift-verify-state.json` so the UI skill can pick up from it. |
@@ -115,6 +115,7 @@ issues:   work on #41   → resolve issue
                         → fixes pushed to the branch → Delivered comment
                         → in-progress off; intent:now stays; the issue stays open
           you merge     → /roadmap-done → proves the merge → closed as completed
+                        → intent:now cleared; the state is what says done
 
 markdown: work on RM-25 → resolve project (.roadmap, else repos:) → read item + conventions
                         → branch rm-25-<slug> → implement → build + test → STOP, you test
@@ -134,11 +135,12 @@ flow**, because being told *work on #41* is the owner saying the item is current
 ever inferred — not from a green build, a merged PR or a passing review — and a PR body says
 `Refs #N`, never `Closes`.
 
-**At the other end, the closed state is what says *done* — not a label.** `intent:now` rides
-through delivery and through the close untouched: there is no `intent:done`, deliberately, because a
-fifth value would duplicate the state, need creating in every repo, and drift out of step with it
-the first time the two disagreed. A board reads the state. That close is its own step, and the
-owner's: **`/roadmap-done`**, after they merge, and it refuses until GitHub says the PR merged.
+**At the other end, the closed state is what says *done* — not a label.** `intent:now` stays on
+through delivery, and the close clears it: intent records what you mean to *do* with an item, and a
+closed one has nothing pending. There is no `intent:done`, deliberately — a fifth value would
+duplicate the state, need creating in every repo, and drift out of step with it the first time the
+two disagreed. That close is its own step, and yours: **`/roadmap-done`**, after you merge, and it
+refuses until GitHub says the PR merged.
 
 ### MoveIt feedback loop
 

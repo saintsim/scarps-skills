@@ -31,10 +31,12 @@ runs it after merging; it proves from GitHub that the PR actually merged before 
 *completed*, and refuses on an open, draft or closed-but-unmerged PR. Closing as *not planned* stays
 hand-owned, one explicit `/roadmap-edit`.
 
-**`intent:now` stays on through delivery and through the close.** The **closed state is what says
-done** — a board reads the state — so there is no `intent:done` and no skill clears or rewrites the
-label on the way past. A fifth intent value would duplicate the state, need creating in every repo
-these skills touch, and be wrong the first time the two disagreed.
+**`intent:now` stays on through delivery, and `/roadmap-done` clears it at the close.** Until the
+close the item really is the current work; after it, a finished item claiming to be in hand is
+noise every `label:intent:now` search picks up. The **closed state is what says done** — a board
+reads the state — so there is no `intent:done`: a fifth value would duplicate the state, need
+creating in every repo these skills touch, and be wrong the first time the two disagreed. An open
+item with no intent is still a validation finding; a closed one is simply finished.
 
 **Ship before review.** `/roadmap-item` runs `/ship` first, so `/review-loop` reads the diff on a
 pushed **draft** PR rather than a working tree, and the review's own fixes are committed and pushed

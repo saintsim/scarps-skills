@@ -381,8 +381,8 @@ loop is clean, and nobody merges a draft.
    most recently done and the one thing waiting on the owner; the close is what settles it, and
    putting it back to `later` here would file delivered work behind work nobody has started. The
    owner reads the comment, merges the PR, and then runs **`/roadmap-done`**, which closes the issue
-   once — and only once — the PR has actually merged. `intent:now` rides through that close
-   untouched: the **closed state is what says done**, and a board reads the state, not the label.
+   once — and only once — the PR has actually merged, and clears `intent:now` on the way: the
+   **closed state is what says done**, so a finished item needs no intent label and keeps none.
 
 ## Final report
 
