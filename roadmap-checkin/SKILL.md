@@ -23,7 +23,9 @@ git branch --show-current
 
 In order: **an id you were given** — in the user's message (`#41`, `RM-27`) or by the skill that
 invoked you, `/roadmap-new` being the one that does; else the **current branch** — `rm-NN-*` is the
-alias `RM-NN`, `<N>-*` is issue `N`; else **ask**, with one AskUserQuestion. **A named id outranks
+alias `RM-NN`, `<N>-*` is issue `N`, and a leading `worktree-` is stripped first, since
+`claude --worktree 41-board` puts the session on `worktree-41-board` (Claude Code's worktree
+documentation, read 2026-09-22); else **ask**, with one AskUserQuestion. **A named id outranks
 the branch**, and the ordering is load-bearing: a session on `41-board-and-auth` that has just
 raised #58 for something else would otherwise check in against #41 and tell the board the wrong
 thing about both.

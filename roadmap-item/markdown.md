@@ -126,6 +126,9 @@ Make those calls and note them. When you do ask, put **every** question in a sin
 
 ## 4. Branch off the fresh default branch — never commit to it directly
 
+**On a Mac this happens inside a worktree** — `SKILL.md`'s rule, which comes first — so
+`<code-repo>` below is the worktree path, never the shared checkout.
+
 ```sh
 git -C <code-repo> fetch --quiet origin
 git -C <code-repo> status --short --branch

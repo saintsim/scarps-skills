@@ -287,6 +287,9 @@ then continue without further checkpoints.
 
 ## 5. Branch off the fresh default branch — never commit to it directly
 
+**On a Mac this happens inside a worktree** — `SKILL.md`'s rule, which comes first: the main
+checkout is never switched out from under a parallel session.
+
 ```sh
 git fetch --quiet origin && git status --short --branch
 git remote show origin | sed -n 's/.*HEAD branch: //p'           # <default-branch>

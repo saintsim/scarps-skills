@@ -45,6 +45,22 @@ mid-loop loses nothing and the PR shows the rounds converging. A second `/ship` 
 they get there — the PR already exists, and a plain push updates it; never an amend, rebase or
 force-push, which rewrites what the reviewer and the PR are both reading.
 
+## Parallel sessions on a Mac live in worktrees
+
+A cloud session has a container and a clone to itself; a Mac session shares one checkout with every
+other session on that machine, and one `git switch` moves another session's HEAD mid-edit. So on
+`Darwin`, a pick-up that creates a branch creates it in a **worktree** — `EnterWorktree`, else
+`git worktree add .claude/worktrees/<branch>` — and the main checkout is left alone. The rule, with
+its fallbacks, lives in **`roadmap-item/SKILL.md`** and only there; `/ship` carries the short form
+for the case where it is the one creating the branch.
+
+Two consequences for any skill written here. **`EnterWorktree` will not act on a skill's say-so** —
+it requires the user or a `CLAUDE.md` to have asked for a worktree — so a skill that needs one must
+name the fallback and never assume the tool fired. And **a branch may arrive wearing a `worktree-`
+prefix**, because `claude --worktree 41-board` branches as `worktree-41-board` (Claude Code's
+worktree documentation, read 2026-09-22); every skill that resolves an item from a branch name
+strips it before matching.
+
 ## The start comment is a contract shared with two other repos
 
 The shape a skill here writes is parsed elsewhere, and a change touches all three:

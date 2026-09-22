@@ -78,6 +78,15 @@ git remote show origin | sed -n 's/.*HEAD branch: //p'
   `feat/watch-dial-layout`). Short and descriptive.
 - Already on a **feature branch** → stay on it.
 
+**On a Mac, never create that branch in a shared checkout.** A cloud session has a clone to itself;
+a Mac session may be one of several in the same working tree, and `git switch` there moves another
+session's HEAD mid-edit. So when `uname -s` is `Darwin`, you are on the default branch, and the
+session is not already isolated (`git rev-parse --git-common-dir` is `.git`, no `--worktree` at
+launch): ask for a worktree with **`EnterWorktree`** — it needs the user or a `CLAUDE.md` to have
+called for one — or `git worktree add .claude/worktrees/<branch> -b <branch> origin/<default-branch>`
+and work from there. If neither is possible, **stop and say so** rather than switching the checkout.
+A session `/roadmap-item` called has usually done this already, and then there is nothing to do.
+
 ### 5. Commit
 
 Stage the relevant changes explicitly and commit; check you're not duplicating an existing commit.
@@ -117,7 +126,10 @@ diff*, and the branch is the thing being shipped — a `Refs` naming an id from 
 conversation would attach this code to an item it does not implement.
 
 1. **The branch** — `<N>-<slug>` is issue `N`, `rm-NN-*` is the alias `RM-NN`. This is the
-   convention, so it usually answers.
+   convention, so it usually answers. **Strip a leading `worktree-` before matching**: a session
+   started with `claude --worktree 41-issues-roadmap` sits on `worktree-41-issues-roadmap`, which is
+   the same item wearing the harness's prefix (Claude Code's worktree documentation, read
+   2026-09-22).
 2. **An id the user or the calling skill named** in this session.
 3. **A start comment you posted** for this work.
 

@@ -183,6 +183,34 @@ existing symlinks and leaving any real (non-symlink) entries untouched — they 
 instead of clobbering them. Because they're symlinks, a `git pull` updates every
 installed skill with no reinstall.
 
+#### Parallel sessions: worktrees on a Mac
+
+Claude Code on the web gives every session its own container and clone, so parallel sessions can't
+collide. On a Mac they share one checkout, and the second session's `git switch` moves the first
+one's HEAD mid-edit — which is what makes parallel work on a Mac feel broken. The skills now cut
+every local pick-up's branch in a **git worktree** under `.claude/worktrees/`, leaving your main
+checkout where it is.
+
+Two bits of local setup make that work without a prompt each time:
+
+```markdown
+<!-- ~/.claude/CLAUDE.md — the line that lets a skill ask for a worktree -->
+Work in a git worktree for any task that creates a branch.
+```
+
+`EnterWorktree` deliberately refuses unless a worktree was asked for by you or by a `CLAUDE.md`, so
+without that line the skills fall back to plain `git worktree add` — which works, but is worth
+knowing about. Second, ignore the directory so the worktrees don't show up as untracked files:
+
+```sh
+echo '.claude/worktrees/' >> .gitignore     # or .git/info/exclude, per repo
+```
+
+You can also start a session already isolated — `claude --worktree 41-board`, or the desktop app's
+worktree option — and the skills detect it and leave well alone. One wrinkle they handle for you:
+that flag branches as `worktree-41-board`, so every skill that reads an item id off the branch name
+strips the prefix first.
+
 #### Let the loops push without asking
 
 `review-loop` commits and pushes **every round**, and it is meant to run unattended — but on a

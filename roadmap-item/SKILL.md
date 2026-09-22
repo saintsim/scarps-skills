@@ -39,5 +39,35 @@ British English. What differs is where the item lives and how completion is reco
 Open-Road PR for markdown; a Delivered comment on the issue for issues, with the owner's
 `/roadmap-done` closing it once the PR has merged).
 
+## On a Mac, the pick-up happens in a worktree — both flows, every time
+
+A cloud session gets a container and a clone of its own, so its checkout is already private. **A Mac
+session does not.** Two sessions in one checkout share a HEAD: the second `git switch` moves the
+first one's branch under it mid-edit, and uncommitted work goes with it. So when the surface is
+local, the branch is cut in a **worktree** and the main checkout is left exactly where it is.
+
+1. **Already isolated? Nothing to do.** True when the session was started with `claude --worktree`
+   (or the desktop app's worktree option), or when `git rev-parse --git-common-dir` is not `.git`.
+2. **Otherwise ask for one**: call **`EnterWorktree`** naming it for the item (`41-issues-roadmap`,
+   `rm-25-<slug>`). It creates `.claude/worktrees/<name>/` and moves the session there. **It refuses
+   unless a worktree was asked for by the user or by a `CLAUDE.md`** — the README says the one line
+   to put in `~/.claude/CLAUDE.md` so every local pick-up qualifies. If it is unavailable or
+   refuses, fall back to git and work from that path:
+
+   ```sh
+   git worktree add .claude/worktrees/<branch> -b <branch> origin/<default-branch>
+   ```
+3. **Check the branch name inside the worktree and fix it if it is wrong.** `claude --worktree <name>`
+   creates its branch as `worktree-<name>` (Claude Code's worktree documentation, read 2026-09-22),
+   which is not the `<N>-<slug>` the rest of the loop — and every skill that resolves an item from a
+   branch — expects. `git branch --show-current`; if it is not the item's branch, `git switch -c` it
+   there.
+4. **`.claude/worktrees/` must be ignored**, or the main checkout shows the worktree as untracked
+   files. Add it to `.gitignore` in your branch when the repo is one of ours, `.git/info/exclude`
+   when it is not, and say which you did.
+
+**Never remove a worktree you did not create, and never call `ExitWorktree` unasked** — the session
+that owns a worktree is the one that decides when its work is disposable.
+
 If the user's opening message waives the second gate — "don't wait for me to test", "go all the way
 through", or equivalent — say so at the start and run straight through, in either flow.
