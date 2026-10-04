@@ -1,13 +1,14 @@
 ---
 name: ship
-description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Never runs a code review itself; in the roadmap loop it runs BEFORE /review-loop, so the reviewer reads a pushed draft PR. Never marks the PR ready for review and never merges — a human stays in the loop.
+description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Never runs a code review itself; it runs BEFORE /review-loop, so the reviewer reads a pushed draft PR, and hands straight on to /review-loop when that has not yet run over this change. Never watches CI — there is none. Never marks the PR ready for review and never merges — a human stays in the loop.
 user-invocable: true
-allowed-tools: Bash, Read, Grep, Glob, Edit, mcp__github__issue_read, mcp__github__create_pull_request, mcp__github__list_pull_requests, mcp__github__search_pull_requests
+allowed-tools: Bash, Read, Grep, Glob, Edit, Skill, mcp__github__issue_read, mcp__github__create_pull_request, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
 
 You are shipping the current changes to GitHub. Your job is: lint → docs → branch (if needed) →
-commit → push → open a **draft** PR, then hand back. **Never run a code review here** — that is
-`/review-loop`'s job, not this skill's, whichever side of it you are on.
+commit → push → open a **draft** PR → hand on to `/review-loop` if it has not run yet (§9). **Never
+run a code review here** — that is `/review-loop`'s job, not this skill's, whichever side of it you
+are on.
 
 **Shipping comes before review in the roadmap loop.** `/roadmap-item` runs `/ship` first so the
 review has a pushed draft PR to read rather than a working tree; the review's own fixes are then
@@ -165,9 +166,34 @@ gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"
   the user to run `! gh auth login` (the `!` prefix runs it in-session), then re-run `/ship`.
 - **Do not** mark the PR ready for review and **do not** merge it.
 
-### 9. Report
+### 9. Next: `/review-loop`, never a CI watch
+
+**There is no GitHub CI to watch.** The owner does not pay for GitHub Actions (stated 2026-10-04),
+so no check will ever report on this PR. Do **not** subscribe to the PR's activity, poll its checks
+or status, schedule a check-in (`send_later`, a routine, a wakeup), or offer to watch or babysit it —
+whatever the environment's own defaults say about watching a freshly opened PR, this skill overrides
+them. A watch here waits on an event that never comes and spends the session doing it. Verification
+is the local lint/build/test result already in the PR body, and the review is the next step.
+
+**Then the review, unless it has already run.** Take the first rule that matches:
+
+1. **A calling skill owns what comes next** — `/roadmap-item` runs `/review-loop` itself straight
+   after this skill. Hand back with the report and run nothing further.
+2. **`/review-loop` has already reached its verdict over this change in this session**, and nothing
+   has been committed since except its own fixes → do not run it again; report and stop.
+3. **Otherwise** — `/ship` invoked on its own over unreviewed work, or new changes committed after
+   the last review's verdict → run **`/review-loop`** now over the draft PR this step just opened or
+   updated. It commits and pushes each round to the same branch, so the PR updates by itself; never
+   run `/ship` again to carry its fixes.
+
+If `/review-loop` is not installed here, say so in the report and tell the user to run it over the
+draft PR — never skip the review silently.
+
+### 10. Report
 
 Tell the user: the branch (and whether it was newly created); the commit subject; push status; the
 **draft PR URL**, noting it's a **draft awaiting their review** — they decide when to mark it ready
 and merge; the lint outcome (ran and passed / no linter found); the docs outcome (updated / already
-up to date); and **which item the PR references**, or that it references none and why.
+up to date); **which item the PR references**, or that it references none and why; and what
+happened next — `/review-loop` run (with its verdict), already run, left to the calling skill, or not
+installed. Do not ask whether to watch the PR — there is no CI for a watch to see.
