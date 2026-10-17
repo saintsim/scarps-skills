@@ -41,6 +41,23 @@ git remote -v
   skill targets GitHub.
 - Read the diff (`git diff HEAD`; `git log --oneline -n 5`) — you'll need it for the branch name,
   commit message, and PR description.
+- **Audit what the branch already carries against its base — a hard gate, not a courtesy.** Resolve
+  the base and list the branch's commits relative to it:
+  ```sh
+  base=$(git remote show origin | sed -n 's/.*HEAD branch: //p')
+  git fetch origin "$base" --quiet
+  git log --oneline "origin/$base..HEAD"
+  ```
+  **Every commit that lists must be one this task is shipping.** If the branch is already ahead of
+  the base with commits you did not make for this work — the tell-tale of a branch or worktree cut
+  from a local feature HEAD rather than a fresh `origin/$base` — **stop and report**. Opening a PR
+  now would drag that unrelated work, often another item's entire diff, into this one, and only a
+  human reviewer would catch it. This is the one check `git status` / `git diff` cannot stand in for:
+  they answer *"what did I edit?"*; a PR is defined by *"what commits land on the base?"* — different
+  questions, and the second is the only one that describes the PR. Verify it here, and never treat the
+  working-tree diff as proof the branch is clean. (If the extra commits are genuinely meant to ship
+  together — a stacked branch the user asked for — say so and continue; the gate catches the ones you
+  did *not* intend, it does not forbid every multi-commit branch.)
 
 ### 2. Re-lint (only if a linter exists)
 
@@ -143,7 +160,15 @@ the one to keep: the push in §6 has already updated it. Do not open a second, d
 reopen it, and do not mark it ready. Refresh the body only if the change makes it wrong, say in the
 report that you updated an existing PR, and skip the rest of this step.
 
-Otherwise, open it:
+Otherwise, open it. **Reconfirm the branch-base audit from §1 first** — one last line of defence,
+because commits and rebases have happened since:
+
+```sh
+git log --oneline "origin/$(git remote show origin | sed -n 's/.*HEAD branch: //p')..HEAD"
+```
+Every commit listed must be one this PR is meant to ship. If an unexpected one appears, **stop and
+report** rather than opening the PR — a PR carrying another item's commits attaches that work to this
+one on every board. Then open it:
 
 ```sh
 gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"
