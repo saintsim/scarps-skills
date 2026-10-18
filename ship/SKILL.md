@@ -219,7 +219,10 @@ saintsim/scarps-skills#25):
   close the issue on merge.
 
 Post it **only when this step opened the PR.** When it updated an existing PR, the issue already
-has the comment, and a second one on every review round is noise. If the comment cannot be posted
+has the comment, and a second one on every review round is noise. **An item can have more than
+one PR**: one that replaces a PR closed without merging, one from a later pick-up, or work split
+across branches. Each newly opened PR gets its own comment. Never edit an earlier one. They are
+history, like start comments, and the newest names the latest PR. If the comment cannot be posted
 (no `gh`, no MCP tool, a permission error), **print the exact text and ask the user to post it**.
 Never skip it silently.
 

@@ -351,8 +351,8 @@ loop is clean, and nobody merges a draft.
    `Resolves`**: a merge must not close an issue; that is automation writing intent. Capture the URL.
    **`/ship` §8 then names the PR on the issue** in one unmarked comment,
    `**Draft pull request:** <url> — <title>`, so that from this point the issue leads to its PR,
-   even if the review loop runs long. **Check that it did**: read the issue's comments for the PR's
-   URL. A cloud session's `/ship` may be a snapshot older than that step, so assume nothing about
+   even if the review loop runs long. **Check that it did**: read the issue's comments for **this**
+   PR's URL. An item can have several PRs, so a comment naming an earlier one does not count. A cloud session's `/ship` may be a snapshot older than that step, so assume nothing about
    which version is installed. If no comment names the PR, post that line yourself. If it cannot
    be posted, print it and ask the user to post it.
 2. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
@@ -382,7 +382,15 @@ loop is clean, and nobody merges a draft.
    ``branch `…` `` and the PR from the **first** `https://github.com/<owner>/<repo>/pull/<n>` after
    the marker. So: never write the PR as a bare `#<n>`; never put another PR's URL above this
    line (the evidence below may cite as many as it likes); and keep the branch in backticks after
-   the word `branch`. SidePocket reads only the marker. Measured 2026-10-18 against Sidebar `26f8c89`:
+   the word `branch`. SidePocket reads only the marker.
+
+   **When the item has more than one PR**, the first `**Pull request:**` line is the PR this
+   delivery shipped: the one from this branch, which the owner merges next. That is the one the
+   parsers take. Name the others, each on its own line **below** it:
+   `**Earlier pull request:** <url> — <title> (merged | closed unmerged | still open)`. A board then
+   links to the PR that needs acting on, and a reader of the issue still sees the whole set. A later
+   pick-up delivers in a comment of its own, and the boards read only a Delivered comment newer
+   than the latest start, so each comment's first PR is that pick-up's. Measured 2026-10-18 against Sidebar `26f8c89`:
    this layout yields the branch and the PR, and Sidebar's `tests/test_item_flow.py` passes.
 
    It is read months later as settled fact: **cite the file and the thing, never a line number**;
