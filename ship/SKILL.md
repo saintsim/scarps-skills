@@ -2,7 +2,7 @@
 name: ship
 description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Never runs a code review itself; it runs BEFORE /review-loop, so the reviewer reads a pushed draft PR, and hands straight on to /review-loop when that has not yet run over this change. Never watches CI — there is none. Never marks the PR ready for review and never merges — a human stays in the loop.
 user-invocable: true
-allowed-tools: Bash, Read, Grep, Glob, Edit, Skill, mcp__github__issue_read, mcp__github__create_pull_request, mcp__github__list_pull_requests, mcp__github__search_pull_requests
+allowed-tools: Bash, Read, Grep, Glob, Edit, Skill, mcp__github__issue_read, mcp__github__add_issue_comment, mcp__github__create_pull_request, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
 
 You are shipping the current changes to GitHub. Your job is: lint → docs → branch (if needed) →
@@ -191,6 +191,38 @@ gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"
   the user to run `! gh auth login` (the `!` prefix runs it in-session), then re-run `/ship`.
 - **Do not** mark the PR ready for review and **do not** merge it.
 
+**Then name the PR on the item**, when §7 resolved one. Post one short comment on the issue, in
+exactly this shape, with the PR's full URL and its title:
+
+```markdown
+**Draft pull request:** https://github.com/<owner>/<repo>/pull/<n> — <PR title>
+```
+
+```sh
+gh issue comment <N> --body "**Draft pull request:** <url> — <title>"   # or add_issue_comment
+```
+
+Without it, nothing on the issue names the PR until `/roadmap-item` posts its Delivered comment, and
+that waits for `/review-loop` to finish however many rounds it takes. Until then the only trace is
+GitHub's *mentioned this issue* timeline entry from `Refs #N`, which looks like any other
+cross-reference. So someone reading the issue on GitHub, or a phone that opens the issue, can't
+find a PR whose review loop has stalled. The other vehicles are ruled out (decided on
+saintsim/scarps-skills#25):
+
+- **It carries no `sidebar:` marker, deliberately.** Sidebar and SidePocket read only marked
+  comments, so an unmarked one adds nothing to the contract the three repos share. The stage comment
+  (`<!-- sidebar:stage -->`) can't carry it either: every stage must name a `stage`
+  (`testing | reviewed | verified`) and the `sha` it was measured at, and *a PR was opened* is none
+  of those three.
+- **Not the issue body**, which is the requirement and is never rewritten.
+- **Not GitHub's *Development* panel.** Both ways of filling it, a closing keyword or a manual link,
+  close the issue on merge.
+
+Post it **only when this step opened the PR.** When it updated an existing PR, the issue already
+has the comment, and a second one on every review round is noise. If the comment cannot be posted
+(no `gh`, no MCP tool, a permission error), **print the exact text and ask the user to post it**.
+Never skip it silently.
+
 ### 9. Next: `/review-loop`, never a CI watch
 
 **There is no GitHub CI to watch.** The owner does not pay for GitHub Actions (stated 2026-10-04),
@@ -219,6 +251,7 @@ draft PR — never skip the review silently.
 Tell the user: the branch (and whether it was newly created); the commit subject; push status; the
 **draft PR URL**, noting it's a **draft awaiting their review** — they decide when to mark it ready
 and merge; the lint outcome (ran and passed / no linter found); the docs outcome (updated / already
-up to date); **which item the PR references**, or that it references none and why; and what
+up to date); **which item the PR references**, or that it references none and why, and the URL of
+the *Draft pull request* comment on it (or that you printed it for the user to post); and what
 happened next — `/review-loop` run (with its verdict), already run, left to the calling skill, or not
 installed. Do not ask whether to watch the PR — there is no CI for a watch to see.

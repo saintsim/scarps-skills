@@ -349,6 +349,12 @@ loop is clean, and nobody merges a draft.
    owns the title (it mirrors the commit subject); do not impose one here, and never a hardcoded
    project prefix — `Sidebar:` is that repo's convention, not every repo's. The body carries **`Refs #41`** — **never `Closes`, `Fixes` or
    `Resolves`**: a merge must not close an issue; that is automation writing intent. Capture the URL.
+   **`/ship` §8 then names the PR on the issue** in one unmarked comment,
+   `**Draft pull request:** <url> — <title>`, so that from this point the issue leads to its PR,
+   even if the review loop runs long. **Check that it did**: read the issue's comments for the PR's
+   URL. A cloud session's `/ship` may be a snapshot older than that step, so assume nothing about
+   which version is installed. If no comment names the PR, post that line yourself. If it cannot
+   be posted, print it and ask the user to post it.
 2. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
    shortcut the loop. Scope it at the PR's own diff (`git diff origin/<default-branch>...HEAD`), and
    tell it the PR URL so its findings and the PR agree. **Each round's fixes are committed and
@@ -362,10 +368,22 @@ loop is clean, and nobody merges a draft.
 
    ```markdown
    <!-- sidebar:delivered -->
-   **Delivered** · branch `41-issues-roadmap` · PR <url>
+   **Delivered** · branch `41-issues-roadmap`
+
+   **Pull request:** https://github.com/<owner>/<repo>/pull/<n> — <PR title>
 
    <the measured evidence and decisions; anything the review deferred>
    ```
+
+   **The PR has a line of its own, straight under the heading**, with the full URL and the PR's
+   title. It used to be the tail of the branch line, which made it the easiest thing on the
+   comment to miss. The layout is free, but two things in it are parsed, so keep them as they
+   are. Sidebar's `parse_delivered_comment` (`sidebar/issues.py`) reads the branch from
+   ``branch `…` `` and the PR from the **first** `https://github.com/<owner>/<repo>/pull/<n>` after
+   the marker. So: never write the PR as a bare `#<n>`; never put another PR's URL above this
+   line (the evidence below may cite as many as it likes); and keep the branch in backticks after
+   the word `branch`. SidePocket reads only the marker. Measured 2026-10-18 against Sidebar `26f8c89`:
+   this layout yields the branch and the PR, and Sidebar's `tests/test_item_flow.py` passes.
 
    It is read months later as settled fact: **cite the file and the thing, never a line number**;
    **produce each citation in the same turn as the sentence citing it**; **record what you observed
