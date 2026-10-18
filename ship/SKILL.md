@@ -165,8 +165,8 @@ gh pr list --head "$(git branch --show-current)" --state open    # or list_pull_
 An **open PR already on this branch** — the usual case when review fixes follow a first `/ship` — is
 the one to keep: the push in §6 has already updated it. Do not open a second, do not close and
 reopen it, and do not mark it ready. Refresh the body only if the change makes it wrong, say in the
-report that you updated an existing PR, **make sure the issue names it** (*Then name the PR on the
-item*, below), and skip the rest of this step.
+report that you updated an existing PR, then skip straight to *Then name the PR on the item*
+below and do only that.
 
 Otherwise, open it. **Reconfirm the branch-base audit from §1 first** — one last line of defence,
 because commits and rebases have happened since:

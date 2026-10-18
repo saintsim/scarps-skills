@@ -57,18 +57,20 @@ gh pr list --state all --head 41-<slug>               # or list_pull_requests wi
 ```
 
 the issue's own **Delivered comment** (`<!-- sidebar:delivered -->`), whose `**Pull request:**`
-line names the PR that delivery shipped and whose `**Earlier pull request:**` lines name the
-others; and the issue's **`**Draft pull request:**` comments**, one per PR `/ship` opened, which
+line names the PR from the item's own branch and whose `**Other pull request:**` lines name the
+rest; and the issue's **`**Draft pull request:**` comments**, one per PR `/ship` opened, which
 name a PR even when its review never finished. These two can name a PR in another repo: an item's
 work can need one, and that PR says `Refs <owner>/<repo>#41`, which neither search above finds.
-Read each candidate (`pull_request_read`, or `gh pr view <N>
---json state,isDraft,merged,mergedAt,mergeCommit,baseRefName,url,title`).
+Read each candidate **in the repo its URL names** (`pull_request_read` with that owner and repo,
+or `gh pr view <N> --repo <owner>/<repo> --json
+state,isDraft,merged,mergedAt,mergeCommit,baseRefName,url,title`).
 
 A PR counts as merged only when GitHub says **`merged: true`**. Capture its **URL**, **merge commit
 sha**, **`mergedAt`** and **base branch**. Then:
 
-- **Merged into the repo's default branch** (`git remote show origin | sed -n 's/.*HEAD branch: //p'`)
-  → go on to §3.
+- **Merged into its repo's default branch** → go on to §3. That is **the PR's own repo's** default
+  branch: `git remote show origin | sed -n 's/.*HEAD branch: //p'` for this one, and `gh repo view
+  <owner>/<repo> --json defaultBranchRef` for a PR in another repo, never this checkout's `origin`.
 - **Merged into some other branch** → say which, and **ask** whether that counts as delivered here;
   a merge into a release or feature branch may mean the work has not reached the trunk yet.
 - **Open, or a draft** → **close nothing.** Report its state, whether it is still a draft, and what
@@ -79,7 +81,7 @@ sha**, **`mergedAt`** and **base branch**. Then:
   decision and the owner's to say out loud.
 - **Several PRs** → every one that delivers the item must be merged. If some are merged and others
   are not, name them and ask. A PR the latest Delivered comment lists as `(closed unmerged)` on an
-  `**Earlier pull request:**` line was replaced, not abandoned: it delivers nothing, so it doesn't
+  `**Other pull request:**` line was replaced, not abandoned: it delivers nothing, so it doesn't
   block. Confirm with GitHub that it really is closed. One it lists as `(still open)` does block,
   as it would anywhere else.
 - **No PR at all** → **close nothing.** Ask, with one AskUserQuestion, whether the item was

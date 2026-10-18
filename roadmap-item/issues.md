@@ -359,11 +359,18 @@ loop is clean, and nobody merges a draft.
    installed. If no comment carries the URL, post that line yourself. If it cannot be posted,
    print it and ask the user to post it.
 
-   **An item's PRs can be in other repos.** When this item needs a change in another repo, open
-   that PR there with `Refs <owner>/<repo>#<N>` naming this item, never a bare `#<N>`, which would
-   name that repo's own issue. Don't name its branch `<N>-…`: a board resolving branches by
-   convention would credit it to that repo's issue `<N>`. Post its *Draft pull request* comment on
-   this item's issue like any other.
+   **An item's PRs can be in other repos.** When this item needs a change in another repo:
+   - **Work in a checkout of that repo**: a sibling clone beside this one (`../<repo>`), or a
+     worktree of it cut from a fresh fetch of its default branch. If there is none, or you can't
+     tell which one it is, stop and ask. Never clone over a directory that already exists.
+   - **Branch there without the item's number.** Don't name it `<N>-…`: a board resolving
+     branches by convention would credit it to that repo's own issue `<N>`. Name it from the
+     change, as `/ship` §4 would.
+   - **Run `/ship` from that checkout, naming the item in the long form**, `<owner>/<repo>#<N>`
+     for this item. Its §7 then writes `Refs <owner>/<repo>#<N>` and posts the *Draft pull
+     request* comment on this item's issue. Without the long form it falls to the branch, or to
+     that repo's own `.roadmap`, and attaches the PR to the wrong item or to none.
+   - Then check this item's issue for that PR's full URL, as above.
 2. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
    shortcut the loop. Scope it at the PR's own diff (`git diff origin/<default-branch>...HEAD`), and
    tell it the PR URL so its findings and the PR agree. **Each round's fixes are committed and
@@ -399,12 +406,14 @@ loop is clean, and nobody merges a draft.
 
    SidePocket reads only the marker.
 
-   **When the item has more than one PR**, the first `**Pull request:**` line is the PR this
-   delivery shipped: the one from this branch, which the owner merges next. That is the one the
-   parsers take. Name the others, each on its own line **below** it:
-   `**Earlier pull request:** <url> — <title> (merged | closed unmerged | still open)`. They may be
-   in other repos; the full URL says which. A board then links to the PR that needs acting on, a
-   reader of the issue still sees the whole set, and `/roadmap-done` reads the status in brackets.
+   **When the item has more than one PR**, the `**Pull request:**` line is always the PR from
+   this branch in the item's own repo. That is the one the parsers take. **Every other PR** goes
+   on its own line **below** it, under one fixed label, whether it came before this delivery or
+   alongside it, and whatever repo it is in:
+   `**Other pull request:** <url> — <title> (merged | closed unmerged | still open)`. A sibling PR
+   shipped in another repo this round is `(still open)` like any unmerged one; the full URL says
+   which repo. A board then links to the item's own PR, a reader of the issue still sees the
+   whole set, and `/roadmap-done` reads the status in brackets.
    A later pick-up delivers in a comment of its own, and the boards read only a Delivered comment
    newer than the latest start, so each comment's first PR is that pick-up's.
 
