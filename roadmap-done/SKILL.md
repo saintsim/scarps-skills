@@ -68,9 +68,11 @@ state,isDraft,merged,mergedAt,mergeCommit,baseRefName,url,title`).
 A PR counts as merged only when GitHub says **`merged: true`**. Capture its **URL**, **merge commit
 sha**, **`mergedAt`** and **base branch**. Then:
 
-- **Merged into its repo's default branch** → go on to §3. That is **the PR's own repo's** default
-  branch: `git remote show origin | sed -n 's/.*HEAD branch: //p'` for this one, and `gh repo view
-  <owner>/<repo> --json defaultBranchRef` for a PR in another repo, never this checkout's `origin`.
+- **Merged into its repo's default branch** → go on to §3. That is **the PR's own repo's**
+  default branch: `git remote show origin | sed -n 's/.*HEAD branch: //p'` for this one, and
+  `gh api repos/<owner>/<repo> --jq .default_branch` for a PR in another repo, never this
+  checkout's `origin`. REST, not `gh repo view --json`: that one is GraphQL, which a cloud
+  session's `gh` refuses (measured 2026-10-18: HTTP 403; `gh api` worked in the same session).
 - **Merged into some other branch** → say which, and **ask** whether that counts as delivered here;
   a merge into a release or feature branch may mean the work has not reached the trunk yet.
 - **Open, or a draft** → **close nothing.** Report its state, whether it is still a draft, and what
