@@ -49,15 +49,19 @@ reopen to tidy anything up.
 
 ## 2. Prove the PR merged — the whole point of this skill
 
-Find every PR that claims this item, from all three places, because any one of them can be missing:
+Find every PR that claims this item, from all four places, because any one of them can be missing:
 
 ```sh
 gh pr list --state all --search 'Refs #41'            # or search_pull_requests: repo:<o>/<r> is:pr "Refs #41"
 gh pr list --state all --head 41-<slug>               # or list_pull_requests with the branch
 ```
 
-and the issue's own **Delivered comment** (`<!-- sidebar:delivered -->`), which carries the PR URL
-`/roadmap-item` captured at ship time. Read each candidate (`pull_request_read`, or `gh pr view <N>
+the issue's own **Delivered comment** (`<!-- sidebar:delivered -->`), whose `**Pull request:**`
+line names the PR that delivery shipped and whose `**Earlier pull request:**` lines name the
+others; and the issue's **`**Draft pull request:**` comments**, one per PR `/ship` opened, which
+name a PR even when its review never finished. These two can name a PR in another repo: an item's
+work can need one, and that PR says `Refs <owner>/<repo>#41`, which neither search above finds.
+Read each candidate (`pull_request_read`, or `gh pr view <N>
 --json state,isDraft,merged,mergedAt,mergeCommit,baseRefName,url,title`).
 
 A PR counts as merged only when GitHub says **`merged: true`**. Capture its **URL**, **merge commit
@@ -74,7 +78,10 @@ sha**, **`mergedAt`** and **base branch**. Then:
   really is dropped, that is `/roadmap-edit` closing it as *not planned*, which is a different
   decision and the owner's to say out loud.
 - **Several PRs** → every one that delivers the item must be merged. If some are merged and others
-  are not, name them and ask.
+  are not, name them and ask. A PR the latest Delivered comment lists as `(closed unmerged)` on an
+  `**Earlier pull request:**` line was replaced, not abandoned: it delivers nothing, so it doesn't
+  block. Confirm with GitHub that it really is closed. One it lists as `(still open)` does block,
+  as it would anywhere else.
 - **No PR at all** → **close nothing.** Ask, with one AskUserQuestion, whether the item was
   delivered another way (a direct commit, work folded into another item's PR, or delivered outside
   this repo) and only continue on an explicit answer naming what delivered it — record that answer,

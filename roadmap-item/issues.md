@@ -347,14 +347,23 @@ loop is clean, and nobody merges a draft.
 
 1. **`/ship`** — re-lints, updates docs, commits, pushes and opens the **draft** PR. `/ship` §8
    owns the title (it mirrors the commit subject); do not impose one here, and never a hardcoded
-   project prefix — `Sidebar:` is that repo's convention, not every repo's. The body carries **`Refs #41`** — **never `Closes`, `Fixes` or
-   `Resolves`**: a merge must not close an issue; that is automation writing intent. Capture the URL.
+   project prefix — `Sidebar:` is that repo's convention, not every repo's. The body carries
+   **`Refs #41`** — **never `Closes`, `Fixes` or `Resolves`**: a merge must not close an issue;
+   that is automation writing intent. Capture the URL.
    **`/ship` §8 then names the PR on the issue** in one unmarked comment,
    `**Draft pull request:** <url> — <title>`, so that from this point the issue leads to its PR,
-   even if the review loop runs long. **Check that it did**: read the issue's comments for **this**
-   PR's URL. An item can have several PRs, so a comment naming an earlier one does not count. A cloud session's `/ship` may be a snapshot older than that step, so assume nothing about
-   which version is installed. If no comment names the PR, post that line yourself. If it cannot
-   be posted, print it and ask the user to post it.
+   even if the review loop runs long. **Check that it did**: read the issue's comments for this
+   PR's **full URL**, `https://github.com/<owner>/<repo>/pull/<n>`. A bare `#<n>` doesn't count,
+   and nor does a comment naming an earlier PR, since an item can have several. A cloud session's
+   `/ship` may be a snapshot older than that step, so assume nothing about which version is
+   installed. If no comment carries the URL, post that line yourself. If it cannot be posted,
+   print it and ask the user to post it.
+
+   **An item's PRs can be in other repos.** When this item needs a change in another repo, open
+   that PR there with `Refs <owner>/<repo>#<N>` naming this item, never a bare `#<N>`, which would
+   name that repo's own issue. Don't name its branch `<N>-…`: a board resolving branches by
+   convention would credit it to that repo's issue `<N>`. Post its *Draft pull request* comment on
+   this item's issue like any other.
 2. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
    shortcut the loop. Scope it at the PR's own diff (`git diff origin/<default-branch>...HEAD`), and
    tell it the PR URL so its findings and the PR agree. **Each round's fixes are committed and
@@ -377,21 +386,33 @@ loop is clean, and nobody merges a draft.
 
    **The PR has a line of its own, straight under the heading**, with the full URL and the PR's
    title. It used to be the tail of the branch line, which made it the easiest thing on the
-   comment to miss. The layout is free, but two things in it are parsed, so keep them as they
-   are. Sidebar's `parse_delivered_comment` (`sidebar/issues.py`) reads the branch from
-   ``branch `…` `` and the PR from the **first** `https://github.com/<owner>/<repo>/pull/<n>` after
-   the marker. So: never write the PR as a bare `#<n>`; never put another PR's URL above this
-   line (the evidence below may cite as many as it likes); and keep the branch in backticks after
-   the word `branch`. SidePocket reads only the marker.
+   comment to miss. **Keep this order: the heading with the branch, then the PR line, then
+   everything else.** Sidebar's `parse_delivered_comment` (`sidebar/issues.py`) takes the
+   **first** ``branch `…` `` after the marker as the branch, and the **first**
+   `https://github.com/<owner>/<repo>/pull/<n>` as the PR. A PR title can contain either, so the
+   heading must come before the title. So:
+   - Never write the PR as a bare `#<n>`.
+   - Never put another PR's URL above this line. The evidence below may cite as many as it likes.
+   - Keep the branch in backticks after the word `branch`, on the heading.
+   - Never put a ```` ```yaml ```` block in the evidence unless it parses. Sidebar reads one as
+     the comment's optional `sha:` and drops the whole comment when it doesn't parse.
+
+   SidePocket reads only the marker.
 
    **When the item has more than one PR**, the first `**Pull request:**` line is the PR this
    delivery shipped: the one from this branch, which the owner merges next. That is the one the
    parsers take. Name the others, each on its own line **below** it:
-   `**Earlier pull request:** <url> — <title> (merged | closed unmerged | still open)`. A board then
-   links to the PR that needs acting on, and a reader of the issue still sees the whole set. A later
-   pick-up delivers in a comment of its own, and the boards read only a Delivered comment newer
-   than the latest start, so each comment's first PR is that pick-up's. Measured 2026-10-18 against Sidebar `26f8c89`:
-   this layout yields the branch and the PR, and Sidebar's `tests/test_item_flow.py` passes.
+   `**Earlier pull request:** <url> — <title> (merged | closed unmerged | still open)`. They may be
+   in other repos; the full URL says which. A board then links to the PR that needs acting on, a
+   reader of the issue still sees the whole set, and `/roadmap-done` reads the status in brackets.
+   A later pick-up delivers in a comment of its own, and the boards read only a Delivered comment
+   newer than the latest start, so each comment's first PR is that pick-up's.
+
+   Measured 2026-10-18 against Sidebar `26f8c89`, by feeding comments in this layout straight to
+   `parse_delivered_comment`: one PR, two PRs in this order, and adversarial titles all give the
+   right branch and PR. The opposite order gives the earlier PR, and a branch line below a title
+   containing ``branch `…` `` gives the wrong branch. Sidebar's `tests/test_item_flow.py` covers
+   only the old one-line layout. A test for this one belongs to saintsim/Sidebar#168.
 
    It is read months later as settled fact: **cite the file and the thing, never a line number**;
    **produce each citation in the same turn as the sentence citing it**; **record what you observed

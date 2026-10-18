@@ -126,8 +126,14 @@ grep -E '^kind:' "$(git rev-parse --show-toplevel)/.roadmap" 2>/dev/null   # git
 git branch --show-current
 ```
 
-No `.roadmap`, or no `kind: github-issues` line → this repo is not on issues; skip to §8 and write no
-reference. Otherwise take the item from, in order:
+**An item can live in another repo.** A scarps-skills item can need a PR in Sidebar, for example.
+When the user or the calling skill names the item as `<owner>/<repo>#N` and that is not this repo,
+**that is the item**, whatever this repo's `.roadmap` says or doesn't say. Skip the routes below:
+a branch number here means *this* repo's issue of that number, so route 1 would attach the work to
+the wrong item. Write the long form in the body (§8), and post the PR comment on that repo's issue.
+
+Otherwise: no `.roadmap`, or no `kind: github-issues` line → this repo is not on issues; skip to §8
+and write no reference. Else take the item from, in order:
 
 **This is the opposite order to `/roadmap-checkin`, deliberately.** That skill announces *a
 session*, so the id it was handed wins over whatever branch is checked out. This one describes *a
@@ -159,7 +165,8 @@ gh pr list --head "$(git branch --show-current)" --state open    # or list_pull_
 An **open PR already on this branch** — the usual case when review fixes follow a first `/ship` — is
 the one to keep: the push in §6 has already updated it. Do not open a second, do not close and
 reopen it, and do not mark it ready. Refresh the body only if the change makes it wrong, say in the
-report that you updated an existing PR, and skip the rest of this step.
+report that you updated an existing PR, **make sure the issue names it** (*Then name the PR on the
+item*, below), and skip the rest of this step.
 
 Otherwise, open it. **Reconfirm the branch-base audit from §1 first** — one last line of defence,
 because commits and rebases have happened since:
@@ -180,9 +187,11 @@ gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"
   - **Changes** — the key changes as a short bullet list.
   - **Testing** — how it was verified. There's no paid GitHub CI, so state the **local**
     build/test/lint result.
-  - **`Refs #<N>`** on its own line, when §7 resolved an item. **Never `Closes`, `Fixes` or
-    `Resolves`** — those close the issue on merge, which is automation writing intent, and intent is
-    hand-owned. This line is what attaches the pull request to the item everywhere it is read.
+  - **`Refs #<N>`** on its own line, when §7 resolved an item, or **`Refs <owner>/<repo>#<N>`**
+    when the item lives in another repo, because a bare `#<N>` there names this repo's issue.
+    **Never `Closes`, `Fixes` or `Resolves`** — those close the issue on merge, which is automation
+    writing intent, and intent is hand-owned. This line is what attaches the pull request to the
+    item everywhere it is read.
   - End the body with this line exactly:
     ```
     🤖 Generated with [Claude Code](https://claude.com/claude-code)
@@ -191,16 +200,22 @@ gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"
   the user to run `! gh auth login` (the `!` prefix runs it in-session), then re-run `/ship`.
 - **Do not** mark the PR ready for review and **do not** merge it.
 
-**Then name the PR on the item**, when §7 resolved one. Post one short comment on the issue, in
-exactly this shape, with the PR's full URL and its title:
+**Then name the PR on the item**, when §7 resolved one. Post one short comment on the item's issue,
+in exactly this shape, with the PR's full URL and its title:
 
 ```markdown
 **Draft pull request:** https://github.com/<owner>/<repo>/pull/<n> — <PR title>
 ```
 
 ```sh
-gh issue comment <N> --body "**Draft pull request:** <url> — <title>"   # or add_issue_comment
+# A file, not --body "…": a title mirrored from a commit subject can hold backticks, `"` or `$`.
+gh issue comment <N> --repo <item-owner>/<item-repo> --body-file - <<'EOF'
+**Draft pull request:** <url> — <title>
+EOF
 ```
+
+Or `add_issue_comment`. `--repo` is the item's repo, which is not this one when the item lives
+elsewhere (§7).
 
 Without it, nothing on the issue names the PR until `/roadmap-item` posts its Delivered comment, and
 that waits for `/review-loop` to finish however many rounds it takes. Until then the only trace is
@@ -218,13 +233,20 @@ saintsim/scarps-skills#25):
 - **Not GitHub's *Development* panel.** Both ways of filling it, a closing keyword or a manual link,
   close the issue on merge.
 
-Post it **only when this step opened the PR.** When it updated an existing PR, the issue already
-has the comment, and a second one on every review round is noise. **An item can have more than
-one PR**: one that replaces a PR closed without merging, one from a later pick-up, or work split
-across branches. Each newly opened PR gets its own comment. Never edit an earlier one. They are
-history, like start comments, and the newest names the latest PR. If the comment cannot be posted
-(no `gh`, no MCP tool, a permission error), **print the exact text and ask the user to post it**.
-Never skip it silently.
+**Post it once per PR, and measure rather than assume.** Read the issue's comments first
+(`gh issue view <N> --repo <item-owner>/<item-repo> --comments`, or `issue_read` with
+`get_comments`). Post only if **no comment carries this PR's full URL**,
+`https://github.com/<owner>/<repo>/pull/<n>`. A bare `#<n>` doesn't count: it is ambiguous across
+repos, and it isn't what this shape or the Delivered comment writes. On a newly opened PR the read
+finds nothing, so you post. On an existing PR it usually finds the earlier comment, so you post
+nothing, because one comment per review round is noise. But it can find none: the PR was opened by
+hand, by a `/ship` older than this step, or by a run whose post failed. Then post it now.
+
+**An item can have more than one PR**: one that replaces a PR closed without merging, one from a
+later pick-up, work split across branches, or a PR in another repo. Each gets its own comment,
+because the URL match is per PR. Never edit an earlier one. They are history, like start comments,
+and the newest names the latest PR. If the comment cannot be posted (no `gh`, no MCP tool, a
+permission error), **print the exact text and ask the user to post it**. Never skip it silently.
 
 ### 9. Next: `/review-loop`, never a CI watch
 
@@ -254,7 +276,8 @@ draft PR — never skip the review silently.
 Tell the user: the branch (and whether it was newly created); the commit subject; push status; the
 **draft PR URL**, noting it's a **draft awaiting their review** — they decide when to mark it ready
 and merge; the lint outcome (ran and passed / no linter found); the docs outcome (updated / already
-up to date); **which item the PR references**, or that it references none and why, and the URL of
-the *Draft pull request* comment on it (or that you printed it for the user to post); and what
+up to date); **which item the PR references**, or that it references none and why; the *Draft pull
+request* comment, one of: its URL (posted now), the URL of the earlier comment you found carrying
+this PR's URL, or that you printed it for the user to post; and what
 happened next — `/review-loop` run (with its verdict), already run, left to the calling skill, or not
 installed. Do not ask whether to watch the PR — there is no CI for a watch to see.
