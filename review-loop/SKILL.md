@@ -8,7 +8,8 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage, Skill
 You are running an **iterative, independent code-review loop**: a **Fable sub-agent is the
 reviewer/judge**; **you (the orchestrator) do all the fixing**; the loop repeats until the *same*
 Fable sub-agent reports the changes clean and good to ship. It runs **unattended** — do not stop to
-ask for approval between rounds.
+ask for approval between rounds. The one stop it makes is a merge conflict that changes logic
+(*Before every review*): that is a decision about the code, not an approval.
 
 The loop's value is an **independent second model** checking the work, so keep the roles separate:
 - **Fable = reviewer only.** It returns findings and a verdict. It must **not** edit code — that
@@ -21,7 +22,9 @@ The loop's value is an **independent second model** checking the work, so keep t
 
 From `$ARGUMENTS`:
 - No arguments → the working diff: `git diff` plus staged/unstaged changes, falling back to
-  `git diff main...HEAD` (or `master`) if the working tree is clean.
+  `git diff "origin/$base...HEAD"` (`$base` as in *Before every review*) if the working tree is
+  clean — never a local `main`, whose merge-base goes stale once the branch has merged the
+  remote's in.
 - `"last N commits"` → `git diff HEAD~N...HEAD`.
 - A file, directory, or feature name → review that scope.
 
@@ -58,17 +61,27 @@ git fetch origin "$base" --quiet
 git merge-base --is-ancestor "origin/$base" HEAD && echo up-to-date || echo behind
 ```
 
+**No `origin`, or `$base` comes back empty** (a remote with no HEAD branch set, a local-only
+repo) → there is no default branch to measure against: say so, skip the update, and review as-is.
+Never guess `main`.
+
 **Behind → merge `origin/$base` in before anything goes to the reviewer:**
 
-- **Merge, never rebase**, on any branch that is pushed: a rebase rewrites what the PR and the
+- **Merge, never rebase**, on any feature branch, pushed or not — one rule, and on a pushed one a
+  rebase rewrites what the PR and the
   reviewer are both reading, and needs the force-push this skill never does. `git merge --no-edit
   "origin/$base"`, then re-run the round's checks (step 3 of the self-review) and, on a PR, push
   the merge with a plain `git push` before sending.
 - **On the default branch itself, with nothing committed** — the work is only in the working
   tree — `git merge --ff-only "origin/$base"` instead. If git refuses because a file it would
-  update has uncommitted edits, `git stash`, fast-forward, `git stash pop`, and treat any conflict
-  the pop reports like a merge conflict below. Never commit the user's work just to make the
-  update go through.
+  update has uncommitted edits or is in the way untracked, `git stash -u`, fast-forward,
+  `git stash pop`, and treat any conflict the pop reports like a merge conflict below. If the
+  stash route itself fails, `git stash pop` back to where you were, say so, and review as-is.
+  Never commit the user's work just to make the update go through.
+- **On the default branch with local commits that have diverged from `origin`** — never merge
+  into or rebase the default branch itself: that writes history onto the user's `main`. Say it
+  is behind and review as-is; `/ship` cuts a feature branch at the end (*When the loop ends*),
+  and the next check, on that branch, merges `origin/$base` in under the first rule.
 - **A conflict** — resolve it when it is mechanical (both sides added neighbouring lines, a moved
   import); regenerate lockfiles and generated files with the repo's own tooling, never by hand.
   **When both sides changed the same logic and either resolution loses behaviour, stop and ask** —
@@ -255,12 +268,14 @@ its nits are fixed:
    **snapshot the reviewed state first**, so you can tell afterwards what `/ship` itself changed:
    ```sh
    git rev-parse HEAD > <scratch>/pre-ship.head
-   git diff HEAD > <scratch>/pre-ship.patch   # the reviewed, uncommitted change
+   git diff HEAD > <scratch>/pre-ship.patch   # the reviewed change to tracked files
+   git ls-files --others --exclude-standard > <scratch>/pre-ship.untracked   # and its new files
    ```
    Then invoke **`/ship`** with the **Skill** tool. It branches if needed, commits, pushes and
    opens the **draft** PR, and it sees this loop's verdict and does not start another review.
-   Afterwards compare `git diff "$(cat <scratch>/pre-ship.head)" HEAD` with the snapshot patch:
-   **any hunk not in the snapshot** is a lint or docs edit `/ship` made, which the reviewer has not
+   Afterwards compare `git diff "$(cat <scratch>/pre-ship.head)" HEAD` with the snapshot — a
+   new file listed in `pre-ship.untracked` is reviewed code, not an addition — and **any hunk not
+   in the snapshot** is a lint or docs edit `/ship` made, which the reviewer has not
    read. Send exactly those hunks to the same reviewer as one more round, and commit and push its
    fixes like any round's, before you report — never a clean verdict over unreviewed changes. No
    difference → say so; that is a measurement, not an assumption.

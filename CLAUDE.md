@@ -43,7 +43,9 @@ pushed **draft** PR rather than a working tree. **Each review round is committed
 ends**, once the round's checks pass — nothing is held back to the end, so a session that dies
 mid-loop loses nothing and the PR shows the rounds converging. A second `/ship` run is never how
 they get there — the PR already exists, and a plain push updates it; never an amend, rebase or
-force-push, which rewrites what the reviewer and the PR are both reading.
+force-push, which rewrites what the reviewer and the PR are both reading. Before each round it
+merges in the latest default branch if the branch is behind — a merge, for the same reason — so
+the reviewer reads the diff that would merge.
 
 **The cloud runs straight through; a Mac stops to test.** Gate 2 exists so the owner can try a
 change on the machine that built it. On claude.ai or the phone app there is nothing local to try,
