@@ -260,7 +260,9 @@ is the local lint/build/test result already in the PR body, and the review is th
 **Then the review, unless it has already run.** Take the first rule that matches:
 
 1. **A calling skill owns what comes next** — `/roadmap-item` runs `/review-loop` itself straight
-   after this skill. Hand back with the report and run nothing further.
+   after this skill, and `/review-loop` invokes this skill at its own end to ship work it has just
+   reviewed (and re-reviews anything this skill's lint or docs step changed). Hand back with the
+   report and run nothing further — from `/review-loop`, running it again would loop.
 2. **`/review-loop` has already reached its verdict over this change in this session**, and nothing
    has been committed since except its own fixes → do not run it again; report and stop.
 3. **Otherwise** — `/ship` invoked on its own over unreviewed work, or new changes committed after
@@ -280,4 +282,5 @@ up to date); **which item the PR references**, or that it references none and wh
 request* comment, one of: its URL (posted now), the URL of the earlier comment you found carrying
 this PR's URL, or that you printed it for the user to post; and what
 happened next — `/review-loop` run (with its verdict), already run, left to the calling skill, or not
-installed. Do not ask whether to watch the PR — there is no CI for a watch to see.
+installed. Do not ask whether to watch the PR — there is no CI for a watch to see — and do not ask
+whether to push or ship anything further: §9 has already settled what runs next.

@@ -1,8 +1,10 @@
 # roadmap-item — after the go-ahead, on the **Open-Road markdown** flow
 
 **This file is the markdown flow only.** It is read on the user's go-ahead at Gate 2 (or straight
-away when the opening message waived the gate) after `markdown.md`, and its section numbers and `§`
-references continue from **`markdown.md`**. A roadmap kept as GitHub Issues never reaches this
+away when the gate was skipped — a cloud session, or an opening message that waived it) after
+`markdown.md`, and it runs **to the end without stopping to ask** — never "shall I ship?", never
+"shall I push the review's fixes?". Its section numbers and `§` references continue from
+**`markdown.md`**. A roadmap kept as GitHub Issues never reaches this
 file — that flow finishes in `issues.md` §9 — which matters because the two differ on intent: the
 ban on writing `now` at pick-up below is the markdown flow's rule, and the issues flow deliberately
 does the opposite. The resolution, conventions and shared-checkout rules still apply.
@@ -86,7 +88,7 @@ Those are the **only** `intent` edits in the run — never flip an item to `now`
 hand-owned, never inferred from a green build, a merged PR or a passing review.
 
 **On the issues flow this one line reads the other way**, and the difference is deliberate rather
-than an oversight: `issues.md` §4 writes `intent:now` at pick-up, because there the label is what
+than an oversight: `issues.md` §2 writes `intent:now` at pick-up, because there the label is what
 tells a phone that the item is being worked now. Here intent lives in a markdown item edited through
 a paired Open-Road pull request the owner merges, so a pick-up cannot write it without opening one.
 If you are reading this while working an item on GitHub Issues, you are in the wrong file.
@@ -139,7 +141,9 @@ If the code PR changes materially in review, revisit the roadmap PR before it me
 
 ## Final report
 
-Report the item and what shipped; the code branch and **draft PR URL**; the verification actually run,
-with results; the review-loop verdict; the Open-Road branch and **draft PR URL**; the item promoted to
-`next` and why; anything deferred or out of scope; and that **both PRs are drafts, and the code PR
-merges first**. If something didn't run, say it didn't run.
+Report the item and what shipped; the code branch and **draft PR URL**; the verification actually
+run, with results; the review-loop verdict; on a run that skipped Gate 2, everything `markdown.md`
+§7 would have reported — above all **decisions and open points** and **how to try it** — since
+this report is the first time the owner sees the work; the Open-Road branch and **draft PR URL**;
+the item promoted to `next` and why; anything deferred or out of scope; and that **both PRs are
+drafts, and the code PR merges first**. If something didn't run, say it didn't run.

@@ -39,5 +39,14 @@ British English. What differs is where the item lives and how completion is reco
 Open-Road PR for markdown; a Delivered comment on the issue for issues, with the owner's
 `/roadmap-done` closing it once the PR has merged).
 
+**Gate 2 is for a Mac.** It exists so the owner can try the change on the machine it was built on;
+a session on claude.ai or the Claude phone app has no local checkout for them to try, and the owner
+reads the change on the GitHub PR, once it has been through `/review-loop`. So **on a cloud session
+Gate 2 is skipped**: build, verify, `/ship`, `/review-loop` and the record of delivery all run
+without a stop, and the final report is the hand-off — a reviewed draft PR, never a question about
+whether to ship it. The surface is the one the issues flow already measures for the start comment
+(`issues.md` §2), and each flow says where it runs that test. On a Mac the gate stays.
+
 If the user's opening message waives the second gate — "don't wait for me to test", "go all the way
-through", or equivalent — say so at the start and run straight through, in either flow.
+through", or equivalent — say so at the start and run straight through, in either flow. The reverse
+holds on a cloud session: "stop for me to test" or equivalent keeps the gate.

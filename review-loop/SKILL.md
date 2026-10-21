@@ -1,14 +1,15 @@
 ---
 name: review-loop
-description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same sub-agent re-reviews; repeat until clean. Findings too big to fix now are recorded — as a `deferred`-labelled issue where the project's roadmap is issues, else in its deferred-review log — never silently ignored.
+description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same sub-agent re-reviews; repeat until clean. Each round first merges in the latest default branch if the branch is behind. Then the reviewed code goes on a draft PR without asking — pushed to the PR it was reviewed on, or shipped with /ship when there was none. Findings too big to fix now are recorded — as a `deferred`-labelled issue where the project's roadmap is issues, else in its deferred-review log — never silently ignored.
 user-invocable: true
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage, Skill
 ---
 
 You are running an **iterative, independent code-review loop**: a **Fable sub-agent is the
 reviewer/judge**; **you (the orchestrator) do all the fixing**; the loop repeats until the *same*
 Fable sub-agent reports the changes clean and good to ship. It runs **unattended** — do not stop to
-ask for approval between rounds.
+ask for approval between rounds. The one stop it makes is a merge conflict that changes logic
+(*Before every review*): that is a decision about the code, not an approval.
 
 The loop's value is an **independent second model** checking the work, so keep the roles separate:
 - **Fable = reviewer only.** It returns findings and a verdict. It must **not** edit code — that
@@ -21,7 +22,9 @@ The loop's value is an **independent second model** checking the work, so keep t
 
 From `$ARGUMENTS`:
 - No arguments → the working diff: `git diff` plus staged/unstaged changes, falling back to
-  `git diff main...HEAD` (or `master`) if the working tree is clean.
+  `git diff "origin/$base...HEAD"` (`$base` as in *Before every review*) if the working tree is
+  clean — never a local `main`, whose merge-base goes stale once the branch has merged the
+  remote's in. With no `$base` to fall back on, ask what to review.
 - `"last N commits"` → `git diff HEAD~N...HEAD`.
 - A file, directory, or feature name → review that scope.
 
@@ -45,9 +48,57 @@ say which PR you are reviewing. Two rules follow from the code being pushed:
   `"permissions": {"allow": ["Bash(git push:*)", "Bash(git commit:*)"]}` in `~/.claude/settings.json`,
   and the rounds stop stopping.
 
+### Before every review — bring the branch up to the latest default branch
+
+**The reviewer reads the diff that would merge, never one against a stale base.** A branch cut days
+ago is reviewed against code that has since moved, so a conflict, a duplicated fix or a rule that
+changed under it is invisible until the merge. So **before round 1, and again before each
+re-review**, fetch and check:
+
+```sh
+base=$(git remote show origin | sed -n 's/.*HEAD branch: //p')
+git fetch origin "$base" --quiet
+git merge-base --is-ancestor "origin/$base" HEAD && echo up-to-date || echo behind
+```
+
+**No `origin`, or `$base` comes back empty** (a remote with no HEAD branch set, a local-only
+repo) → there is no default branch to measure against: say so, skip the update, and review as-is.
+Never guess `main`.
+
+**Behind → merge `origin/$base` in before anything goes to the reviewer:**
+
+- **Merge, never rebase**, on any feature branch, pushed or not — one rule, and on a pushed one a
+  rebase rewrites what the PR and the reviewer are both reading, and needs the force-push this
+  skill never does. `git merge --no-edit "origin/$base"`, then re-run the round's checks (step 3 of the self-review) and, on a PR, push
+  the merge with a plain `git push` before sending.
+- **On the default branch itself, with nothing committed** — the work is only in the working
+  tree — `git merge --ff-only "origin/$base"` instead. If git refuses because a file it would
+  update has uncommitted edits or is in the way untracked, `git stash -u`, fast-forward,
+  `git stash pop`, and treat any conflict the pop reports like a merge conflict below. If the
+  stash route itself fails, pop back anything that was stashed (`git stash pop`), say so, and
+  review as-is.
+  Never commit the user's work just to make the update go through.
+- **On the default branch with local commits that have diverged from `origin`** — never merge
+  into or rebase the default branch itself: that writes history onto the user's `main`. Say it
+  is behind and review as-is; `/ship` cuts a feature branch at the end (*When the loop ends*),
+  and the next check, on that branch, merges `origin/$base` in under the first rule.
+- **A conflict** — resolve it when it is mechanical (both sides added neighbouring lines, a moved
+  import); regenerate lockfiles and generated files with the repo's own tooling, never by hand.
+  **When both sides changed the same logic and either resolution loses behaviour, stop and ask** —
+  that is a decision about the code, not a step in the loop. Abort the merge (`git merge --abort`)
+  rather than leaving the tree half-merged while you ask.
+- **Tell the reviewer** that the base moved, which commit it was merged up to, and anything the
+  merge resolved — on a re-review, so it can tell the merge's hunks from your fixes.
+
+Up to date → say so in the round's report and carry on. A scope that is not a branch's change — a
+directory of code already on the default branch — still fetches first, so the reviewer reads the
+code as it stands now.
+
 ## The loop
 
 ### Round 1 — spawn the Fable reviewer
+
+Bring the branch up to date first (*Before every review*).
 
 Spawn **one** Fable sub-agent with the **Agent** tool (`model: "fable"`,
 `subagent_type: "general-purpose"`), and **keep its agent id** — every re-review goes back to this
@@ -156,12 +207,14 @@ Fix-introduced collateral is the number-one cause of extra rounds, so before sen
 
 ### Each round — same Fable sub-agent re-reviews
 
-Use **`SendMessage`** to the **same** Fable agent id (never a fresh Agent call — that loses its
-memory of the prior round). Tell it:
+Bring the branch up to date first (*Before every review*) — the base may have moved during the
+round. Then use **`SendMessage`** to the **same** Fable agent id (never a fresh Agent call — that
+loses its memory of the prior round). Tell it:
 - What you fixed, per prior finding — and remind it to **verify each claimed fix against the actual
   diff, not your description of it**.
 - The commit you just pushed for this round and the head sha, where the change is on a PR, so it
   re-reviews what the PR actually carries.
+- Whether the base moved and was merged in since its last review, and up to which commit.
 - What you deferred and why (with the tracked-file reference), and any finding you're contesting
   (phrased as a question for its ruling).
 - To re-review the fixes, confirm whether each prior finding is resolved, raise any new issues the
@@ -193,6 +246,50 @@ ordinary findings.
 
 **Safety cap:** if you reach **6 rounds** without converging, or findings start oscillating (fixing A
 reopens B), **stop** and report the state to the user rather than looping forever.
+
+## When the loop ends — put the reviewed code on a draft PR, without asking
+
+**Never end by asking whether to ship or whether the review's fixes have been pushed.** The owner
+reads reviewed work on its GitHub PR, so that is where a finished loop leaves it, on every surface;
+the answer to both questions is always yes, and asking only stops the session until somebody
+types it. Take the first rule that matches, once the verdict is `CLEAN` or `CLEAN_AFTER_NITS` and
+its nits are fixed:
+
+1. **The change is on a PR** — the roadmap loop's case. Every round is already pushed (*Scope*);
+   check it is so, because there are two ways it may not be:
+   ```sh
+   git status --short                         # uncommitted edits — the last round's nits, say
+   git log "origin/$(git branch --show-current)..HEAD" --oneline   # commits not on the PR
+   ```
+   **Uncommitted edits** to reviewed files → commit them first, in the round-commit shape (step 4
+   of the self-review), staged by path. **Unpushed commits** → a plain `git push`. Say which you
+   did. Never `/ship` here — it would try to open a second PR.
+2. **It is not on a PR yet** — `/review-loop` run by hand over a working tree or local commits —
+   **snapshot the reviewed state first**, so you can tell afterwards what `/ship` itself changed:
+   ```sh
+   git rev-parse HEAD > <scratch>/pre-ship.head
+   git diff HEAD > <scratch>/pre-ship.patch   # the reviewed change to tracked files
+   git ls-files --others --exclude-standard > <scratch>/pre-ship.untracked   # and its new files
+   ```
+   Then invoke **`/ship`** with the **Skill** tool. It branches if needed, commits, pushes and
+   opens the **draft** PR, and it sees this loop's verdict and does not start another review.
+   Afterwards compare `git diff "$(cat <scratch>/pre-ship.head)" HEAD` with the snapshot — a
+   new file listed in `pre-ship.untracked` is reviewed code, not an addition — and **any hunk not
+   in the snapshot** is a lint or docs edit `/ship` made, which the reviewer has not
+   read. Send exactly those hunks to the same reviewer as one more round, and commit and push its
+   fixes like any round's, before you report — never a clean verdict over unreviewed changes. No
+   difference → say so; that is a measurement, not an assumption.
+3. **Nothing was changed and nothing is unshipped** — a review of code already on the default
+   branch that found nothing, say — there is nothing to ship; say so.
+
+**The safety cap is not a verdict**, so a loop that hit it does not ship anything new: push the
+rounds already committed, if the change is on a PR, and report the state.
+
+**If `/ship` cannot run** — it is not installed here, the Skill tool is unavailable, or it stopped on
+one of its own hard rules (detached HEAD, a remote that is not GitHub, unrelated dirty changes, no
+GitHub access) — relay its reason in its own words, name the branch and every unpushed commit, and
+say what the user has to clear before running `/ship` over that branch. That is the report, not a
+question — never ask whether to ship.
 
 ## Deferred findings — an issue, labelled `deferred`
 
@@ -265,7 +362,8 @@ When the loop converges (or hits the safety cap), report:
    landed in, and whether that write still needs its own PR.
 6. **UI polish** — any polish Fable suggested and whether you applied it.
 7. **Build/tests** — final status, and anything that could not be executed in this environment.
-8. **Pushed** — where the change is on a PR: the commit per round, the final head, and the PR URL.
+8. **Pushed** — the commit per round, the final head, and the **draft PR URL**, saying whether the
+   PR already existed or `/ship` opened it at the end (*When the loop ends*).
 
 Do not claim "clean" unless Fable actually said so — report faithfully, including any deferrals or a
 hit safety cap.
