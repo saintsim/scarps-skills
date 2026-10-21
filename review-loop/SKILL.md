@@ -24,7 +24,7 @@ From `$ARGUMENTS`:
 - No arguments → the working diff: `git diff` plus staged/unstaged changes, falling back to
   `git diff "origin/$base...HEAD"` (`$base` as in *Before every review*) if the working tree is
   clean — never a local `main`, whose merge-base goes stale once the branch has merged the
-  remote's in.
+  remote's in. With no `$base` to fall back on, ask what to review.
 - `"last N commits"` → `git diff HEAD~N...HEAD`.
 - A file, directory, or feature name → review that scope.
 
@@ -68,15 +68,15 @@ Never guess `main`.
 **Behind → merge `origin/$base` in before anything goes to the reviewer:**
 
 - **Merge, never rebase**, on any feature branch, pushed or not — one rule, and on a pushed one a
-  rebase rewrites what the PR and the
-  reviewer are both reading, and needs the force-push this skill never does. `git merge --no-edit
-  "origin/$base"`, then re-run the round's checks (step 3 of the self-review) and, on a PR, push
+  rebase rewrites what the PR and the reviewer are both reading, and needs the force-push this
+  skill never does. `git merge --no-edit "origin/$base"`, then re-run the round's checks (step 3 of the self-review) and, on a PR, push
   the merge with a plain `git push` before sending.
 - **On the default branch itself, with nothing committed** — the work is only in the working
   tree — `git merge --ff-only "origin/$base"` instead. If git refuses because a file it would
   update has uncommitted edits or is in the way untracked, `git stash -u`, fast-forward,
   `git stash pop`, and treat any conflict the pop reports like a merge conflict below. If the
-  stash route itself fails, `git stash pop` back to where you were, say so, and review as-is.
+  stash route itself fails, pop back anything that was stashed (`git stash pop`), say so, and
+  review as-is.
   Never commit the user's work just to make the update go through.
 - **On the default branch with local commits that have diverged from `origin`** — never merge
   into or rebase the default branch itself: that writes history onto the user's `main`. Say it
