@@ -45,6 +45,13 @@ mid-loop loses nothing and the PR shows the rounds converging. A second `/ship` 
 they get there — the PR already exists, and a plain push updates it; never an amend, rebase or
 force-push, which rewrites what the reviewer and the PR are both reading.
 
+**The cloud runs straight through; a Mac stops to test.** Gate 2 exists so the owner can try a
+change on the machine that built it. On claude.ai or the phone app there is nothing local to try,
+and the owner reads the work on its PR once it is reviewed — so a cloud session skips the gate and
+hands over a reviewed draft PR, and `/review-loop` itself ends by putting the reviewed code on a
+draft PR (pushing, or running `/ship` when there is none) on every surface. **Neither ever asks
+whether to ship or push**: those questions have one answer, and asking only parks the session.
+
 ## The start comment is a contract shared with two other repos
 
 The shape a skill here writes is parsed elsewhere, and a change touches all three:
@@ -66,7 +73,7 @@ verbatim; the heading line and the paragraph under the block are prose and are n
   fallback — never skip a write silently.
 - **Detect, never assume.** Where a skill must know what machine it is on, it measures and takes
   the first matching rule in a stated order, and stops and asks where nothing matches rather than
-  inventing a value. **The test itself lives in `roadmap-item/issues.md` §4 and
+  inventing a value. **The test itself lives in `roadmap-item/issues.md` §2 and
   `roadmap-checkin/SKILL.md` §3, and only there** — it changes as the harness does, and a copy here
   would be the one that rots.
 - **Examples get copied more reliably than rules get obeyed.** An example that contradicts the rule

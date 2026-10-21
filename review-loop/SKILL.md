@@ -1,8 +1,8 @@
 ---
 name: review-loop
-description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same sub-agent re-reviews; repeat until clean. Findings too big to fix now are recorded — as a `deferred`-labelled issue where the project's roadmap is issues, else in its deferred-review log — never silently ignored.
+description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same sub-agent re-reviews; repeat until clean. Then the reviewed code goes on a draft PR without asking — pushed to the PR it was reviewed on, or shipped with /ship when there was none. Findings too big to fix now are recorded — as a `deferred`-labelled issue where the project's roadmap is issues, else in its deferred-review log — never silently ignored.
 user-invocable: true
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage, Skill
 ---
 
 You are running an **iterative, independent code-review loop**: a **Fable sub-agent is the
@@ -194,6 +194,32 @@ ordinary findings.
 **Safety cap:** if you reach **6 rounds** without converging, or findings start oscillating (fixing A
 reopens B), **stop** and report the state to the user rather than looping forever.
 
+## When the loop ends — put the reviewed code on a draft PR, without asking
+
+**Never end by asking whether to ship or whether the review's fixes have been pushed.** The owner
+reads reviewed work on its GitHub PR, so that is where a finished loop leaves it, on every surface;
+the answer to both questions is always yes, and asking only stops the session until somebody
+types it. Take the first rule that matches, once the verdict is `CLEAN` or `CLEAN_AFTER_NITS` and
+its nits are fixed:
+
+1. **The change is on a PR** — the roadmap loop's case. Every round is already pushed (*Scope*);
+   check it is so: `git status` clean of the reviewed files and `git log @{upstream}..HEAD` empty.
+   Push anything still sitting there with a plain `git push`, and say so. Never `/ship` here — it
+   would try to open a second PR.
+2. **It is not on a PR yet** — `/review-loop` run by hand over a working tree or local commits —
+   invoke **`/ship`** with the **Skill** tool. It branches if needed, commits, pushes and opens the
+   **draft** PR, and it sees this loop's verdict and does not start another review. **If its lint or
+   docs step changed any file**, that is code the reviewer has not read: send those hunks to the
+   same reviewer as one more round, and commit and push its fixes like any round's, before you
+   report — never a clean verdict over unreviewed changes.
+3. **Nothing was changed and nothing is unshipped** — a review of code already on the default
+   branch that found nothing, say — there is nothing to ship; say so.
+
+**The safety cap is not a verdict**, so a loop that hit it does not ship anything new: push the
+rounds already committed, if the change is on a PR, and report the state. If `/ship` is not
+installed here, say plainly that the reviewed change is not on a PR yet, naming the branch and
+every unpushed commit — that is the report, not a question.
+
 ## Deferred findings — an issue, labelled `deferred`
 
 A finding too big to fix now is **recorded, never silently ignored**. Where it is recorded depends on
@@ -265,7 +291,8 @@ When the loop converges (or hits the safety cap), report:
    landed in, and whether that write still needs its own PR.
 6. **UI polish** — any polish Fable suggested and whether you applied it.
 7. **Build/tests** — final status, and anything that could not be executed in this environment.
-8. **Pushed** — where the change is on a PR: the commit per round, the final head, and the PR URL.
+8. **Pushed** — the commit per round, the final head, and the **draft PR URL**, saying whether the
+   PR already existed or `/ship` opened it at the end (*When the loop ends*).
 
 Do not claim "clean" unless Fable actually said so — report faithfully, including any deferrals or a
 hit safety cap.
