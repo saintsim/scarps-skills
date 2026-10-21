@@ -365,8 +365,30 @@ loop is clean, and nobody merges a draft.
 
 1. **`/ship`** — re-lints, updates docs, commits, pushes and opens the **draft** PR. `/ship` §8
    owns the title (it mirrors the commit subject); do not impose one here, and never a hardcoded
-   project prefix — `Sidebar:` is that repo's convention, not every repo's. The body carries **`Refs #41`** — **never `Closes`, `Fixes` or
-   `Resolves`**: a merge must not close an issue; that is automation writing intent. Capture the URL.
+   project prefix — `Sidebar:` is that repo's convention, not every repo's. The body carries
+   **`Refs #41`** — **never `Closes`, `Fixes` or `Resolves`**: a merge must not close an issue;
+   that is automation writing intent. Capture the URL.
+   **`/ship` §8 then names the PR on the issue** in one unmarked comment,
+   `**Draft pull request:** <url> — <title>`, so that from this point the issue leads to its PR,
+   even if the review loop runs long. **Check that it did**: read the issue's comments for this
+   PR's **full URL**, `https://github.com/<owner>/<repo>/pull/<n>`. A bare `#<n>` doesn't count,
+   and nor does a comment naming an earlier PR, since an item can have several. A cloud session's
+   `/ship` may be a snapshot older than that step, so assume nothing about which version is
+   installed. If no comment carries the URL, post that line yourself. If it cannot be posted,
+   print it and ask the user to post it.
+
+   **An item's PRs can be in other repos.** When this item needs a change in another repo:
+   - **Work in a checkout of that repo**: a sibling clone beside this one (`../<repo>`), or a
+     worktree of it cut from a fresh fetch of its default branch. If there is none, or you can't
+     tell which one it is, stop and ask. Never clone over a directory that already exists.
+   - **Branch there without the item's number.** Don't name it `<N>-…`: a board resolving
+     branches by convention would credit it to that repo's own issue `<N>`. Name it from the
+     change, as `/ship` §4 would.
+   - **Run `/ship` from that checkout, naming the item in the long form**, `<owner>/<repo>#<N>`
+     for this item. Its §7 then writes `Refs <owner>/<repo>#<N>` and posts the *Draft pull
+     request* comment on this item's issue. Without the long form it falls to the branch, or to
+     that repo's own `.roadmap`, and attaches the PR to the wrong item or to none.
+   - Then check this item's issue for that PR's full URL, as above.
 2. **`/review-loop`** — invoke it with the **Skill** tool and let it run to a clean verdict; don't
    shortcut the loop. Scope it at the PR's own diff (`git diff origin/<default-branch>...HEAD`), and
    tell it the PR URL so its findings and the PR agree. **Each round's fixes are committed and
@@ -380,10 +402,44 @@ loop is clean, and nobody merges a draft.
 
    ```markdown
    <!-- sidebar:delivered -->
-   **Delivered** · branch `41-issues-roadmap` · PR <url>
+   **Delivered** · branch `41-issues-roadmap`
+
+   **Pull request:** https://github.com/<owner>/<repo>/pull/<n> — <PR title>
 
    <the measured evidence and decisions; anything the review deferred>
    ```
+
+   **The PR has a line of its own, straight under the heading**, with the full URL and the PR's
+   title. It used to be the tail of the branch line, which made it the easiest thing on the
+   comment to miss. **Keep this order: the heading with the branch, then the PR line, then
+   everything else.** Sidebar's `parse_delivered_comment` (`sidebar/issues.py`) takes the
+   **first** ``branch `…` `` after the marker as the branch, and the **first**
+   `https://github.com/<owner>/<repo>/pull/<n>` as the PR. A PR title can contain either, so the
+   heading must come before the title. So:
+   - Never write the PR as a bare `#<n>`.
+   - Never put another PR's URL above this line. The evidence below may cite as many as it likes.
+   - Keep the branch in backticks after the word `branch`, on the heading.
+   - Never put a ```` ```yaml ```` block in the evidence unless it parses. Sidebar reads one as
+     the comment's optional `sha:` and drops the whole comment when it doesn't parse.
+
+   SidePocket reads only the marker.
+
+   **When the item has more than one PR**, the `**Pull request:**` line is always the PR from
+   this branch in the item's own repo. That is the one the parsers take. **Every other PR** goes
+   on its own line **below** it, under one fixed label, whether it came before this delivery or
+   alongside it, and whatever repo it is in:
+   `**Other pull request:** <url> — <title> (merged | closed unmerged | still open)`. A sibling PR
+   shipped in another repo this round is `(still open)` like any unmerged one; the full URL says
+   which repo. A board then links to the item's own PR, a reader of the issue still sees the
+   whole set, and `/roadmap-done` reads the status in brackets.
+   A later pick-up delivers in a comment of its own, and the boards read only a Delivered comment
+   newer than the latest start, so each comment's first PR is that pick-up's.
+
+   Measured 2026-10-18 against Sidebar `26f8c89`, by feeding comments in this layout straight to
+   `parse_delivered_comment`: one PR, two PRs in this order, and adversarial titles all give the
+   right branch and PR. The opposite order gives the earlier PR, and a branch line below a title
+   containing ``branch `…` `` gives the wrong branch. Sidebar's `tests/test_item_flow.py` covers
+   only the old one-line layout. A test for this one belongs to saintsim/Sidebar#168.
 
    It is read months later as settled fact: **cite the file and the thing, never a line number**;
    **produce each citation in the same turn as the sentence citing it**; **record what you observed
