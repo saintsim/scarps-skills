@@ -31,8 +31,8 @@ so at the start and run §8 straight into §9.
 **On a cloud session Gate 2 is skipped without being asked.** §2 has already measured the surface
 for the start comment; when it came out **`surface: web`**, the owner is on claude.ai or the phone,
 has nothing local to test, and reads the change on the PR only once it has been reviewed — so a
-stop at Gate 2 asks a question whose answer is always *ship it and review it*. Say at the start
-that this is a cloud session and the run goes straight through to a reviewed draft PR, then run §8
+stop at Gate 2 asks a question whose answer is always *ship it and review it*. Say so as soon
+as §2 has measured it — the run goes straight through to a reviewed draft PR — then run §8
 straight into §9. **`surface: local` keeps the gate**, and so does an opening message on the web
 asking to stop for testing. Never decide this from anything but §2's measurement: a guessed
 `web` on a Mac ships work the owner meant to try first.
@@ -343,8 +343,8 @@ Commit on the branch, then **stop** and report: the **item** (number, alias, tit
 for) and **branch**; **what changed**, by file or area; **verification** — every command and its
 actual result, and anything you couldn't run; **how to try it**; **decisions and open points**; and
 **what happens next** — on their go-ahead `/ship` opens the draft PR, `/review-loop` then reviews
-what is on it, and the Delivered comment lands last; and that "don't wait for me to test" runs
-straight through next time.
+what is on it, and the Delivered comment lands last; and — on a Mac — that "don't wait for me to
+test" runs straight through next time.
 
 Do **not** run `/ship` or `/review-loop` yet — the evidence must describe the code that ships. If
 the user reports a problem, fix it on the same branch, re-verify, and hand back again — the gate
@@ -352,8 +352,8 @@ repeats; the skill does not restart.
 
 ## 9. On the go-ahead — ship, review, deliver
 
-Reached on the owner's go-ahead at Gate 2, or straight from §7 when the gate was skipped (a cloud
-session, or a waiver). **Run all four steps without stopping to ask**, whichever way you came in.
+Reached on the owner's go-ahead at Gate 2, or straight from §8's commit when the gate was skipped
+(a cloud session, or a waiver). **Run all four steps without stopping to ask**, whichever way you came in.
 Never "shall I ship?" and never "shall I push the review's fixes?": both answers are already
 written below.
 
@@ -423,4 +423,5 @@ Gate 2, reviewed but unshipped, or shipped with the Delivered comment outstandin
 pick-up: post a new start comment (§2) with `branch:` set and the paragraph stating the real state**,
 and make sure `in-progress` is on. Never edit the earlier comment. Past Gate 2, pick up at the
 matching step of §9 — and a resume on a cloud session that finds the item waiting at Gate 2 goes
-on into §9 too, since that gate is not for the web (*Touch points*).
+on into §9 too, since that gate is not for the web (*Touch points*). Say in the report that the
+earlier session stopped for a local test that was never recorded as done.
