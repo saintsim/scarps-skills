@@ -27,6 +27,17 @@ through", "don't stop", or anything equivalent — **skip Gate 2** and run strai
 start that you're doing so, and when you reach the end of §7 read `after-go-ahead.md` from this
 skill's own directory and continue there.
 
+**On a cloud session Gate 2 is skipped without being asked**, the same way: the owner on claude.ai
+or the phone has nothing local to test and reads the change on the PR once it has been reviewed.
+This flow posts no start comment, so it measures the surface itself — **run the surface test in
+`issues.md` §2** (this skill's own directory; the test's other home is `roadmap-checkin/SKILL.md`
+§3, and it is never copied here) and stop at its
+measurement, posting nothing. **`surface: web` → skip the gate**, and say at the start that the run
+goes straight through to reviewed draft PRs. **`surface: local` → keep it.** Where that test
+reaches its *stop and ask* rule, **keep the gate** instead: the stop at Gate 2 is itself the
+question, and a guess of `web` on a Mac would ship work the owner meant to try first. An opening
+message asking to stop for testing keeps it on the web too.
+
 ---
 
 ## 1. Resolve the item — never guess the project
@@ -196,13 +207,17 @@ Fix what you break. Pre-existing failures aren't yours to fix — confirm they a
 
 ## 7. Gate 2 — hand back for the user to test
 
+**A Mac only, unless the owner asked for it** — on a cloud session, commit on the branch, read
+`after-go-ahead.md` and carry on there (*Touch points*); what this section would have reported goes
+in its final report instead.
+
 Commit your work on the branch, then **stop** and report: the **item** (id, title, project, what it
 asked for) and **branch**; **what changed**, by file or area; **verification** — every command run and
 its actual result, and anything you couldn't run; **how to try it** — what to run, open, look at;
 **decisions and open points**, including anything left out of scope; and **what happens next** — that
 on their go-ahead you'll run `/ship` to open the draft PR, then `/review-loop` over that PR, then
-prepare the Open-Road draft PR, and that "don't wait for me to test" runs straight through next
-time.
+prepare the Open-Road draft PR, and — on a Mac — that "don't wait for me to test" runs straight
+through next time.
 
 Do **not** run `/ship`, `/review-loop`, or touch Open-Road yet — the evidence must describe the code
 that actually ships.
@@ -218,7 +233,8 @@ If a branch named `rm-<id>-*` already exists in either repo, don't start again. 
 to — `git log`, `git status`, `git worktree list`, `gh pr list --head <branch>` — say so, and rejoin:
 still implementing, waiting at Gate 2, reviewed but unshipped, or shipped with the roadmap half
 outstanding. Rejoining past Gate 2 means reading `after-go-ahead.md` and picking up at the matching
-step.
+step — and so does a resume on a cloud session that finds the item waiting at Gate 2. Say in the
+report that the earlier session stopped for a local test that was never recorded as done.
 
 A leftover worktree from an earlier run of *this* item is yours to reuse or remove. One belonging to
 another item or session is not — leave it, and pick a branch name that doesn't collide.
