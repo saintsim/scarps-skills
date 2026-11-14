@@ -2,7 +2,7 @@
 name: review-loop
 description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same sub-agent re-reviews; repeat until clean. Each round first merges in the latest default branch if the branch is behind. Then the reviewed code goes on a draft PR without asking — pushed to the PR it was reviewed on, or shipped with /ship when there was none — and, only in a repo whose `.roadmap` opts in with a `verify` line set to `ready-for-review`, the PR is marked ready so its check runs, and a red check gets one bounded fix. Never merges. Findings too big to fix now are recorded — as a `deferred`-labelled issue where the project's roadmap is issues, else in its deferred-review log — never silently ignored.
 user-invocable: true
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage, Skill, mcp__github__update_pull_request, mcp__github__pull_request_read, mcp__github__actions_list, mcp__github__get_job_logs, mcp__claude-code-remote__subscribe_pr_activity, mcp__claude-code-remote__unsubscribe_pr_activity, mcp__claude-code-remote__send_later
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage, Skill, mcp__github__update_pull_request, mcp__github__pull_request_read, mcp__github__actions_list, mcp__github__get_job_logs, mcp__claude-code-remote__subscribe_pr_activity, mcp__claude-code-remote__unsubscribe_pr_activity, mcp__claude-code-remote__send_later, mcp__claude-code-remote__delete_trigger
 ---
 
 You are running an **iterative, independent code-review loop**: a **Fable sub-agent is the
@@ -33,7 +33,7 @@ changed. Report the resolved scope before starting round 1.
 
 **When the work is already on a pull request** — the roadmap loop ships before it reviews, so this
 is the common case — review the **PR's own diff**, `git diff origin/<default-branch>...HEAD`, and
-say which PR you are reviewing. Two rules follow from the code being pushed:
+say which PR you are reviewing. Three rules follow from the code being pushed:
 
 - **Every fix has to reach the PR, at the end of every round** — not once the loop goes clean.
   Commit on the same branch and push; a plain `git push` updates the PR. **Never run `/ship` to do
@@ -42,9 +42,9 @@ say which PR you are reviewing. Two rules follow from the code being pushed:
   mid-loop takes every unpushed round with it.
 - **Leave the PR a draft while the loop runs, and never merge it.** A clean verdict from the
   reviewer is not a human's approval. **The one exception is a repo that opts in to a
-  ready-for-review check** (*Ready for review*, below): there the session's last act, after the
-  clean verdict and the final push, is marking the PR ready so the check runs once, on reviewed
-  code. Everywhere else the PR stays a draft. No repo's opt-in ever permits a merge.
+  ready-for-review check** (*Ready for review*, below): there, after the clean verdict and the
+  final push, the session marks the PR ready so the check runs on reviewed code, and reads the
+  result. Everywhere else the PR stays a draft. No repo's opt-in ever permits a merge.
 - **If a push needs approval, the loop is not unattended any more.** Say so at the first round it
   happens, keep going, and never report a round as pushed when it was not — the final report names
   every commit still sitting unpushed. Worth telling the user once: one entry,
@@ -285,6 +285,12 @@ its nits are fixed:
 3. **Nothing was changed and nothing is unshipped** — a review of code already on the default
    branch that found nothing, say — there is nothing to ship; say so.
 
+**If `/ship` cannot run** — it is not installed here, the Skill tool is unavailable, or it stopped on
+one of its own hard rules (detached HEAD, a remote that is not GitHub, unrelated dirty changes, no
+GitHub access) — relay its reason in its own words, name the branch and every unpushed commit, and
+say what the user has to clear before running `/ship` over that branch. That is the report, not a
+question — never ask whether to ship.
+
 **The safety cap is not a verdict**, so a loop that hit it does not ship anything new: push the
 rounds already committed, if the change is on a PR, and report the state. Nor does it mark
 anything ready (*Ready for review*).
@@ -300,91 +306,137 @@ fires once, when the work is done. saintsim/jlpt-jiten-swift was the first (its 
 that leaves its PR a draft never triggers that check and never sees it go red, which defeats the
 point: verifying a cloud session's work without the owner having to be there.
 
-**The opt-in is one line in the repo's `.roadmap`**, read from the checkout:
+**One rule holds the section together: a PR this skill leaves ready is reviewed, and its check
+has passed or is still running.** Every outcome below that would leave a ready PR unchecked or red
+puts it back to draft instead, so *ready* never looks checked when it is not.
+
+### The opt-in — a `.roadmap` line, confirmed against a workflow
+
+**The opt-in is a `verify: ready-for-review` line in the repo's `.roadmap`.** A line, not detection
+of the workflow, because whether a session marks its own PRs ready is the owner's decision about
+the repo, like intent; a workflow that happens to listen for `ready_for_review` (a labeller, a
+notifier) is not that decision. The line works in either kind of `.roadmap`. Run the script in
+this skill's own directory, from anywhere in the checkout:
 
 ```sh
-grep -E '^verify: *ready-for-review *$' "$(git rev-parse --show-toplevel)/.roadmap" 2>/dev/null
+<this skill's directory>/ready-check-opt-in.sh
 ```
 
-No `.roadmap`, or no such line → **not opted in**: leave the PR a draft and stop here, exactly as
-before. A line, not detection of the workflow, because whether a session should mark its own PRs
-ready is the owner's decision about the repo, like intent; a workflow that happens to listen for
-`ready_for_review` (a labeller, a notifier) is not that decision. The line works in either kind of
-`.roadmap`.
+It reads both answers from the **freshly fetched default branch**, never the working tree, so a
+session's own branch cannot opt itself in, and it reads the value as YAML would (quotes, a trailing
+comment, CRLF). Its first line decides:
 
-**Opted in — then confirm the check exists before relying on it.** Measure, never assume:
+- **`NOT_OPTED_IN`** → leave the PR a draft and stop here, exactly as before.
+- **`UNRECOGNISED <value>`** → a `verify:` line this skill does not know: leave the PR a draft and
+  say so in the report, naming the value, so a typo does not read as a silent opt-out.
+- **`NO_BASE`** → no default branch could be resolved or fetched: leave the PR a draft and say why.
+- **`NO_WORKFLOW`** → the opt-in names a check that does not exist on the default branch: leave the
+  PR a draft and say so. Marking it ready would hand the owner an unchecked PR that looks checked.
+- **`OPTED_IN`** → it lists the workflow files that mention `ready_for_review`. **Read each one**
+  and confirm it triggers on `pull_request` (or `pull_request_target`) with `ready_for_review` in
+  its `types:` — a mention in a comment is not a trigger. None does → treat it as `NO_WORKFLOW`.
 
-```sh
-base=$(git remote show origin | sed -n 's/.*HEAD branch: //p')
-git grep -l 'ready_for_review' "origin/$base" -- .github/workflows/ 2>/dev/null
-```
+**The script is missing** (an older snapshot of this skill) or cannot run → do the same by hand:
+`git fetch` the default branch, read `.roadmap` from it with `git show origin/<base>:.roadmap`, and
+list `.github/workflows/` from it (`actions_list` with `list_workflows` is the web equivalent).
 
-(`actions_list` with `list_workflows` is the web equivalent; read a candidate's file to see its
-trigger.) **No workflow on the default branch mentions `ready_for_review`** → the opt-in names a
-check that does not exist: say so in the report, leave the PR a draft, and stop. Marking it ready
-would hand the owner an unchecked PR that looks checked.
+### Marking it ready
 
 Mark the PR ready **only when all of these hold**: the verdict was `CLEAN` or `CLEAN_AFTER_NITS`
 (never the safety cap), its nits are fixed, the change is on a PR, and nothing is uncommitted or
-unpushed (*When the loop ends*, rule 1). Then:
+unpushed (*When the loop ends*, rule 1).
 
-1. **Mark it ready — the session's last change to the PR.**
-   On a Mac, `gh pr ready <n>`. On a cloud session, `update_pull_request` with `draft: false`, or
-   else `gh api -X POST repos/<owner>/<repo>/pulls/<n>/ccr/ready_for_review` — **not**
-   `gh pr ready`, which goes through GraphQL and was refused there with HTTP 403 (measured
-   2026-11-14; the refusal itself names the `ccr/ready_for_review` and `ccr/convert_to_draft`
-   routes). **Then read it back** —
-   `gh pr view <n> --json isDraft`, or `pull_request_read` with `get` — and go on only when it is no
-   longer a draft. **If it cannot be marked ready** (no `gh`, no MCP tool, a permission error, or
-   the read-back still says draft), say so and ask the owner to tap *Ready for review* on the PR,
-   naming its URL. Never skip it silently, and never report a check as running when nothing marked
-   the PR ready.
-2. **Wait for the check, within a bound.** This is the one place these skills watch a check, and
-   only because the owner built one to be read. `/ship` still watches nothing: the check runs on
-   *ready for review*, never on the opening or the push `/ship` makes.
-   - **Find the run**: `gh run list --branch <branch> --event pull_request --limit 5 --json
-     databaseId,name,status,conclusion,createdAt`, or `actions_list` with `list_workflow_runs`
-     filtered to the branch, and take the newest run created after you marked the PR ready. **None
-     within about five minutes** → report it and stop: the workflow's own filters (a branch-name
-     pattern, say) may exclude this PR. Never re-toggle the PR to coax a run.
-   - **Wait for its conclusion**: on a Mac, `gh run watch <run-id> --exit-status`, as a background
-     command where the harness offers one. On a cloud session, `subscribe_pr_activity` on the PR and
-     end the turn — the check's result arrives as an event and wakes the session; schedule one
-     fallback check-in (`send_later`) at the bound, in case it never does.
-   - **The bound is 60 minutes from marking the PR ready.** A self-hosted runner can be asleep or
-     busy, and a run queued that long is the owner's to look at, not the session's to wait out.
-     Past it, report the run as still queued or in progress, with its URL, and stop. The PR stays
-     ready.
-3. **Green** → report it, with the run's URL. Done.
-4. **Red** → read the failure before touching anything: `gh run view <run-id> --log-failed`, or
-   `get_job_logs` with `run_id` and `failed_only: true`.
-   - **Not the code** — the runner was offline, a toolchain or signing step failed, the workflow
-     itself errored — fix nothing: report what failed, in the log's own words, and stop. A code
-     change cannot fix a runner.
-   - **The code** — **one fix attempt, no more.** Fix exactly what the log names; reproduce it
-     locally first where the toolchain exists. Run the repo's lint and tests, and **send the fix to
-     the same reviewer as one more round** (*Do not edit the reviewed code after the final verdict*
-     still holds) — or, if that agent can no longer be reached after the wait, one fresh Fable
-     reviewer for that single round, told what the loop already passed. Commit it in the round-commit shape and push with a plain `git push`. Then
-     re-trigger the check: put the PR back to draft (`gh pr ready <n> --undo` on a Mac;
-     `update_pull_request` with `draft: true`, or `gh api -X POST
-     repos/<owner>/<repo>/pulls/<n>/ccr/convert_to_draft`, on a cloud session), mark it ready
-     again as in step 1, read it back, and wait once
-     more under step 2, with a fresh 60-minute bound.
-   - **The attempt is spent** — the reviewer would not pass the fix, or the re-run is red again →
-     **put the PR back to draft**, so *ready* still means reviewed and checked, push anything
-     committed, and report: both runs' URLs, the failure in the log's own words, and what the fix
-     tried. Never a second attempt.
-5. **Unsubscribe** (`unsubscribe_pr_activity`) once the check has reported or the bound has passed,
-   on a cloud session, so the owner's later comments on the PR do not wake a finished session.
+Choose the GitHub route **by what works, not by which machine you think this is**: `gh pr …` goes
+through GraphQL, which was refused from a cloud session with HTTP 403 (measured 2026-11-14 — the
+refusal itself names the `ccr/ready_for_review` and `ccr/convert_to_draft` routes), while
+`gh api` on REST paths answered there. So take the first that succeeds:
+
+1. `update_pull_request` with `draft: false`, where the GitHub MCP tools are loaded.
+2. `gh pr ready <n>`.
+3. `gh api -X POST repos/<owner>/<repo>/pulls/<n>/ccr/ready_for_review` — the route the 403 names.
+
+Only the refusal and the REST read below were measured on 2026-11-14; routes 1 and 3 actually
+changing a PR's state were **not**, so the read-back is what proves it. Back to draft takes the
+same order: `update_pull_request` with `draft: true`, `gh pr ready <n> --undo`, or
+`.../ccr/convert_to_draft`.
+
+1. **Note the time and the head**: `date -u +%Y-%m-%dT%H:%M:%SZ` and `git rev-parse HEAD`.
+2. **Already not a draft?** Read it first (below). The owner may have tapped *Ready* mid-loop, or an
+   earlier run left it ready, and marking a ready PR ready fires no event. Put it back to draft,
+   then mark it ready, so the check runs on the reviewed head.
+3. **Mark it ready, then read it back** — `gh api repos/<owner>/<repo>/pulls/<n> --jq .draft`
+   (REST, so it works on both surfaces; `gh pr view` does not), or `pull_request_read` with `get`.
+   Go on only when it reads `false`.
+4. **If it cannot be marked ready** — every route refused, or the read-back still says draft — say
+   so and ask the owner to tap *Ready for review* on the PR, naming its URL. Never skip it silently,
+   and never report a check as running when nothing marked the PR ready.
+
+### Waiting for the check — within a bound
+
+This is the one place these skills watch a check, and only because the owner built one to be read.
+`/ship` still watches nothing: the check runs on *ready for review*, never on the opening or the
+push `/ship` makes.
+
+**With `gh`**, start the watcher in this skill's directory **as a background command**, on any
+surface:
+
+```sh
+<this skill's directory>/watch-check.sh <owner>/<repo> <head-sha> <time-marked-ready>
+```
+
+It polls GitHub's REST API once a minute for the runs a PR event started on that commit after that
+time — every one of them, if two workflows listen — and exits by itself, so there is nothing to
+cancel. On a cloud session, end the turn after starting it; its exit wakes the session. **The bound
+is 60 minutes from marking ready**, and a run must have **started within 5 minutes**. Its last line
+is the outcome:
+
+- **`SUCCESS`** → green. Report it, with the run URLs it printed. The PR stays ready. Done.
+- **`FAILURE`** → red; the failed run ids follow. Go to *A red check*.
+- **`NO_RUN`** → no run started: the workflow's own filters (a branch-name pattern, say) may
+  exclude this PR. **Put the PR back to draft** and report it; never re-toggle to coax a run.
+- **`TIMEOUT`** → runs started but are still queued or running. A self-hosted runner can be asleep
+  or busy, and a run queued that long is the owner's to look at, not the session's to wait out.
+  Report the run URLs; **the PR stays ready**, because the run is attached to it and will report
+  there by itself.
+- **`ERROR`** → `gh api` failed. Report its line and put the PR back to draft — nothing is watching.
+
+**Without `gh`** (MCP tools only) → `subscribe_pr_activity` on the PR **before** marking it ready, so
+a fast check cannot finish unseen, and `send_later` one check-in 60 minutes out. On **every** wake —
+a check result, a comment, a push, or the check-in — read the runs with `pull_request_read`
+`get_check_runs` (or `actions_list` `list_workflow_runs`) and apply the outcomes above. Not yet
+concluded and inside the bound → end the turn again. Once an outcome is acted on,
+`unsubscribe_pr_activity` and cancel the check-in (`delete_trigger` on the id `send_later`
+returned), so neither wakes a finished session; a check-in that fires anyway finds the outcome
+already reported and does nothing. **No `gh`, no subscription and no `send_later`** → there is no
+way to wait: leave the PR ready, say the check was triggered but could not be read, and ask the
+owner to look at it.
+
+### A red check — one fix, no more
+
+Read the failure before touching anything: `gh run view <run-id> --log-failed` (on a Mac), or
+`get_job_logs` with `run_id` and `failed_only: true`, or `gh api
+repos/<owner>/<repo>/actions/runs/<run-id>/jobs` for the failed step.
+
+- **Not the code** — the runner was offline, a toolchain or signing step failed, the workflow
+  itself errored → fix nothing, since a code change cannot fix a runner. **Put the PR back to
+  draft**, report what failed in the log's own words, and stop.
+- **The code** → **one fix attempt.** Fix exactly what the log names; reproduce it locally first
+  where the toolchain exists. Run the repo's lint and tests, then commit in the round-commit shape
+  and push with a plain `git push`, as every round does — so the fix is on the PR, reviewed or not.
+  **Send it to the same reviewer as one more round** (*Do not edit the reviewed code after the final
+  verdict* still holds) — or, if that agent cannot be reached after the wait, one fresh Fable
+  reviewer for that single round, told what the loop already passed.
+  - **`CLEAN`, or `CLEAN_AFTER_NITS` with its nits fixed, committed and pushed** → re-trigger: back
+    to draft, then mark ready again and wait once more, both exactly as above, with a fresh note of
+    the time and head and a fresh 60-minute bound.
+  - **`NEEDS_WORK`** → the attempt is spent.
+- **The attempt is spent** — the reviewer would not pass the fix, or the re-run comes back
+  `FAILURE`, `NO_RUN` or `ERROR` → **put the PR back to draft** and report: every run's URL, the
+  failure in the log's own words, what the fix tried, and, if the reviewer did not pass it, that the
+  pushed fix is unreviewed. **Never a second attempt**, whatever the re-run's cause. A re-run that
+  ends `TIMEOUT` is handled as above: reported, the PR left ready.
 
 **Never merge, whatever the check says.** A green check on a ready PR is still the owner's to merge.
-
-**If `/ship` cannot run** — it is not installed here, the Skill tool is unavailable, or it stopped on
-one of its own hard rules (detached HEAD, a remote that is not GitHub, unrelated dirty changes, no
-GitHub access) — relay its reason in its own words, name the branch and every unpushed commit, and
-say what the user has to clear before running `/ship` over that branch. That is the report, not a
-question — never ask whether to ship.
 
 ## Deferred findings — an issue, labelled `deferred`
 
@@ -459,10 +511,12 @@ When the loop converges (or hits the safety cap), report:
 7. **Build/tests** — final status, and anything that could not be executed in this environment.
 8. **Pushed** — the commit per round, the final head, and the **PR URL**, saying whether the
    PR already existed or `/ship` opened it at the end (*When the loop ends*).
-9. **Ready for review** — one of: not opted in, so the PR stays a draft; opted in but no
-   `ready_for_review` workflow found, so it stays a draft; marked ready, with the check's run URL and
-   its result (green, red and fixed, red and back to draft, not the code, or still running past the
-   bound); or could not be marked ready, and the owner was asked to tap it.
+9. **Ready for review** — the opt-in script's answer, and then one of: left a draft (not opted
+   in, an unrecognised `verify:` value, no default branch, or no `ready_for_review` workflow);
+   marked ready, with every run URL and the outcome — green; red and fixed, green on the re-run;
+   red and back to draft (not the code, or the one attempt spent); no run started, back to draft;
+   still running past the bound, left ready; or triggered but unreadable — and the PR's final
+   state; or could not be marked ready, and the owner was asked to tap it.
 
 Do not claim "clean" unless Fable actually said so — report faithfully, including any deferrals or a
 hit safety cap.

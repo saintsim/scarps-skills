@@ -52,8 +52,8 @@ change on the machine that built it. On claude.ai or the phone app there is noth
 and the owner reads the work on its PR once it is reviewed — so a cloud session skips the gate and
 hands over a reviewed draft PR, and `/review-loop` itself ends by putting the reviewed code on a
 draft PR (pushing, or running `/ship` when there is none) on every surface — then marking it ready
-in an opted-in repo (*Conventions*). **Neither ever asks
-whether to ship or push**: those questions have one answer, and asking only parks the session.
+in an opted-in repo (*Conventions*). **Neither ever asks whether to ship or push**: those questions
+have one answer, and asking only parks the session.
 
 ## The start comment is a contract shared with two other repos
 
@@ -87,12 +87,12 @@ verbatim; the heading line and the paragraph under the block are prose and are n
 ## Conventions
 
 **PRs open as drafts. A human merges.** Never merge, and never mark a PR ready unasked — with one
-exception: in a repo whose `.roadmap` says `verify: ready-for-review`, `/review-loop` marks its PR
-ready as the session's last act, after the clean verdict and the final push, so the repo's
-ready-for-review check runs once, on reviewed code, and a red check gets one fix before the PR goes
-back to draft. The rules live in `review-loop/SKILL.md` (*Ready for review*); `/ship` still opens
-drafts and watches nothing. A PR body says `Refs #N`,
-never `Closes` — a merge closing an issue is automation writing intent.
+exception: in a repo whose default branch's `.roadmap` says `verify: ready-for-review`,
+`/review-loop` marks its PR ready after the clean verdict and the final push, so the repo's
+ready-for-review check runs on reviewed code, and a red check gets one fix before the PR goes back
+to draft. The rules live in `review-loop/SKILL.md` (*Ready for review*); `/ship` still opens drafts
+and watches nothing. A PR body says `Refs #N`, never `Closes` — a merge closing an issue is
+automation writing intent.
 
 **British English** in prose. Comment the *intent* — why this shape, not what the line does.
 

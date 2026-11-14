@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Never runs a code review itself; it runs BEFORE /review-loop, so the reviewer reads a pushed draft PR, and hands straight on to /review-loop when that has not yet run over this change. Never watches CI — there is none it runs, and in a repo opted in to a ready-for-review check, that check is /review-loop's to mark ready and read. Never marks the PR ready for review itself and never merges — a human stays in the loop.
+description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Never runs a code review itself; it runs BEFORE /review-loop, so the reviewer reads a pushed draft PR, and hands straight on to /review-loop when that has not yet run over this change. Never watches CI — none runs on opening or on a push, and in a repo opted in to a ready-for-review check, that check is /review-loop's to mark ready and read. Never marks the PR ready for review itself and never merges — a human stays in the loop.
 user-invocable: true
 allowed-tools: Bash, Read, Grep, Glob, Edit, Skill, mcp__github__issue_read, mcp__github__add_issue_comment, mcp__github__create_pull_request, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
@@ -283,10 +283,11 @@ draft PR — never skip the review silently.
 
 Tell the user: the branch (and whether it was newly created); the commit subject; push status; the
 **draft PR URL**, noting it's a **draft awaiting review** — `/review-loop` marks it ready only in an
-opted-in repo, and the merge is always the owner's; the lint outcome (ran and passed / no linter found); the docs outcome (updated / already
-up to date); **which item the PR references**, or that it references none and why; the *Draft pull
-request* comment, one of: its URL (posted now), the URL of the earlier comment you found carrying
-this PR's URL, or that you printed it for the user to post; and what
-happened next — `/review-loop` run (with its verdict), already run, left to the calling skill, or not
-installed. Do not ask whether to watch the PR — nothing this skill did triggers a check — and do not ask
-whether to push or ship anything further: §9 has already settled what runs next.
+opted-in repo, and the merge is always the owner's; the lint outcome (ran and passed / no linter
+found); the docs outcome (updated / already up to date); **which item the PR references**, or that
+it references none and why; the *Draft pull request* comment, one of: its URL (posted now), the URL
+of the earlier comment you found carrying this PR's URL, or that you printed it for the user to
+post; and what happened next — `/review-loop` run (with its verdict), already run, left to the
+calling skill, or not installed. Do not ask whether to watch the PR — nothing this skill did
+triggers a check — and do not ask whether to push or ship anything further: §9 has already settled
+what runs next.
