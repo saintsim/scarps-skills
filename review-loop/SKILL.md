@@ -447,9 +447,13 @@ or `gh api repos/<owner>/<repo>/actions/runs/<run-id>/jobs` for the failed step 
 - **Not the code** — the runner was offline, a toolchain or signing step failed, the workflow
   itself errored → fix nothing, since a code change cannot fix a runner. **Put the PR back to
   draft**, report what failed in the log's own words, and stop.
-- **The code** → **one fix attempt.** Fix exactly what the log names; reproduce it locally first
-  where the toolchain exists. Run the repo's lint and tests, then commit in the round-commit shape
-  and push with a plain `git push`, as every round does — so the fix is on the PR, reviewed or not.
+- **The code** → **one fix attempt.** Fix exactly what the log names — the minimal change, from the
+  log's own words, never a guess at an error it does not show. Reproduce it locally first where the
+  toolchain exists; a cloud container usually has none for what the runner builds (no Xcode, no
+  simulator on Linux), and then **claim no pass**: say the fix is unverified until the re-run, which
+  is the only verification there is. Run whatever lint and tests do run here, then commit in the
+  round-commit shape and push with a plain `git push`, as every round does — so the fix is on the
+  PR, reviewed or not.
   **Send it to the same reviewer as one more round** (*Do not edit the reviewed code after the final
   verdict* still holds) — or, if that agent cannot be reached after the wait, one fresh Fable
   reviewer for that single round, told what the loop already passed.
