@@ -444,9 +444,9 @@ Read the failure before touching anything: `get_job_logs` with `run_id` and `fai
 or `gh api repos/<owner>/<repo>/actions/runs/<run-id>/jobs` for the failed step and then
 `gh api repos/<owner>/<repo>/actions/jobs/<job-id>/logs` for its log.
 
-- **Not the code** — the runner was offline, a toolchain or signing step failed, the workflow
-  itself errored → fix nothing, since a code change cannot fix a runner. **Put the PR back to
-  draft**, report what failed in the log's own words, and stop.
+- **Not the code** — the runner was offline, a toolchain, signing step or simulator runtime failed,
+  the workflow itself errored → fix nothing, since a code change cannot fix a runner. **Put the PR
+  back to draft**, report what failed in the log's own words, and stop.
 - **The code** → **one fix attempt.** Fix exactly what the log names — the minimal change, from the
   log's own words, never a guess at an error it does not show. Reproduce it locally first where the
   toolchain exists; a cloud container usually has none for what the runner builds (no Xcode, no
@@ -465,7 +465,8 @@ or `gh api repos/<owner>/<repo>/actions/runs/<run-id>/jobs` for the failed step 
   `FAILURE`, `NO_RUN` or `ERROR` → **put the PR back to draft** and report: every run's URL, the
   failure in the log's own words, what the fix tried, and, if the reviewer did not pass it, that the
   pushed fix is unreviewed. **Never a second attempt**, whatever the re-run's cause. A re-run that
-  ends `TIMEOUT` is handled as above: reported, the PR left ready.
+  ends `TIMEOUT` is handled as above — reported, the PR left ready — and the report says the fix is
+  still unverified.
 
 **Never merge, whatever the check says.** A green check on a ready PR is still the owner's to merge.
 
