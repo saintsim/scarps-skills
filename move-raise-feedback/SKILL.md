@@ -59,7 +59,8 @@ In the **backend repo** (use `git -C <backend>`):
    ```
    🤖 Generated with [Claude Code](https://claude.com/claude-code)
    ```
-   Never `gh pr ready`, never `gh pr merge`. If `gh` is missing/unauthenticated, stop and tell the user to run `! gh auth login`.
+   Never `gh pr ready`, never `gh pr merge` — a feedback PR is the backend author's to read, and the
+   `verify: ready-for-review` opt-in (`/review-loop`) applies only to a reviewed code PR in a repo that sets it. If `gh` is missing/unauthenticated, stop and tell the user to run `! gh auth login`.
 
 **Never create git hooks.** Never operate in a detached HEAD in either repo.
 
