@@ -22,13 +22,13 @@ that dies mid-review leaves the work pushed instead of stranded.
    shortcut the loop. Scope it at the PR's diff and give it the PR URL. **Each round's fixes are
    committed and pushed as that round ends**, never saved up for the end — a plain push on the same
    branch, never a second `/ship` run, which would try to open a second PR — and the PR stays a
-   **draft**, unless the code repo's `.roadmap` says `verify: ready-for-review`: then `/review-loop`
-   marks the code PR ready after its clean verdict and reads the check (its *Ready for review*
-   section), and the result goes in the roadmap PR's body. Anything it defers belongs in this
-   project's deferred log in Open-Road, not in the code repo — but **don't let it open a second
-   roadmap PR**: have it report the entries rather than pushing them itself, and write them onto the
-   roadmap
-   branch in §9, which is already opening a PR against Open-Road for this item.
+   **draft**, unless this is a cloud session and the code repo's default branch says
+   `verify: ready-for-review` in its `.roadmap`: then `/review-loop` marks the code PR ready after its clean
+   verdict and reads the check (its *Ready for review* section), and the result goes in the roadmap
+   PR's body. Anything it defers belongs in this project's deferred log in Open-Road, not in the
+   code repo — but **don't let it open a second roadmap PR**: have it report the entries rather than
+   pushing them itself, and write them onto the roadmap branch in §9, which is already opening a PR
+   against Open-Road for this item.
 3. **The Open-Road change** — §9. Not optional: an item without its roadmap PR is unfinished.
 
 ## 9. The Open-Road change

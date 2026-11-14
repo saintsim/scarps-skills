@@ -361,9 +361,10 @@ written below.
 on a **draft** PR, so the reviewer reads the same diff a human would, the evidence and the review
 both hang off something with a URL, and a session that dies mid-review leaves the code pushed rather
 than stranded in a working tree. The draft PR is the point — nothing is ready for review until the
-loop is clean, and nobody merges a draft. In a repo whose `.roadmap` says
-`verify: ready-for-review`, `/review-loop` marks the PR ready as its last act, so the repo's check
-runs once, on reviewed code; everywhere else it stays a draft. Either way **nothing here merges**.
+loop is clean, and nobody merges a draft. On a cloud session in a repo whose default branch's
+`.roadmap` says `verify: ready-for-review`, `/review-loop` marks the PR ready after the final push,
+so the repo's check runs on reviewed code; everywhere else, a Mac included, it stays a draft. Either
+way **nothing here merges**.
 
 1. **`/ship`** — re-lints, updates docs, commits, pushes and opens the **draft** PR. `/ship` §8
    owns the title (it mirrors the commit subject); do not impose one here, and never a hardcoded
@@ -410,8 +411,8 @@ runs once, on reviewed code; everywhere else it stays a draft. Either way **noth
    says nothing and left the PR a draft, say so in the report and ask the owner to tap *Ready for
    review* — never skip it silently.
 3. **The Delivered comment** — what the roadmap PR used to carry, posted **after** the review's
-   fixes — and any fix for a red check — are pushed, so the evidence describes the PR's final head. The
-   body is not rewritten.
+   fixes — and any fix for a red check — are pushed, so the evidence describes the PR's final head.
+   The body is not rewritten.
 
    ```markdown
    <!-- sidebar:delivered -->
@@ -424,9 +425,9 @@ runs once, on reviewed code; everywhere else it stays a draft. Either way **noth
 
    **In an opted-in repo, the evidence says what happened to the PR's check**: marked ready, with
    every run's URL and the outcome `/review-loop` reported — green; red, fixed and green on the
-   re-run; red and put back to draft; no run started; or still running when the bound passed —
-   and whether the PR ended ready or a draft. A repo that has not
-   opted in says nothing about it: the PR is a draft, as always.
+   re-run; red and put back to draft; no run started; or still running when the bound passed — and
+   whether the PR ended ready or a draft. A repo that has not opted in says nothing about it: the PR
+   is a draft, as always.
 
    **The PR has a line of its own, straight under the heading**, with the full URL and the PR's
    title. It used to be the tail of the branch line, which made it the easiest thing on the
@@ -484,9 +485,8 @@ the review-loop verdict; in an opted-in repo, that the PR was **marked ready** a
 reported (or that it could not be marked ready and the owner was asked to); on a run that skipped
 Gate 2, everything §8 would have reported — above all **decisions and open points** and **how to try
 it** — since this report is the first time the owner sees the work; the start and Delivered comment
-URLs; anything deferred or out of
-scope; and that **the PR is a draft — or marked ready, in an opted-in repo — and the issue stays
-open until the owner merges it and runs `/roadmap-done`**. Then
+URLs; anything deferred or out of scope; and that **the PR is a draft — or marked ready, in an
+opted-in repo — and the issue stays open until the owner merges it and runs `/roadmap-done`**. Then
 **name the item you would pick up next and why** — one line, from open issues whose dependencies
 are all closed as completed — and say plainly that **the owner applies `intent:next` themselves**
 (one word to `/roadmap-edit`); this skill does not.

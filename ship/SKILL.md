@@ -14,8 +14,9 @@ are on.
 review has a pushed draft PR to read rather than a working tree; the review's own fixes are then
 committed and pushed onto the same branch, which updates the PR. That is why a draft PR is the
 output and never a ready-for-review one: it exists precisely so unreviewed code has somewhere safe
-and visible to live. Only `/review-loop` ever marks it ready, and only in a repo whose `.roadmap` says
-`verify: ready-for-review`, once its verdict is clean (its *Ready for review* section).
+and visible to live. Only `/review-loop` ever marks it ready — on a cloud session, in a repo whose
+`.roadmap` says `verify: ready-for-review`, once its verdict is clean (its *Ready for review*
+section).
 
 The steps below assume the `gh` CLI; in an environment without it (e.g. remote/cloud sessions), do
 the same operations under the same rules with whatever GitHub tooling the environment provides.

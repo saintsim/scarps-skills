@@ -44,10 +44,10 @@ a session on claude.ai or the Claude phone app has no local checkout for them to
 reads the change on the GitHub PR, once it has been through `/review-loop`. So **on a cloud session
 Gate 2 is skipped**: build, verify, `/ship`, `/review-loop` and the record of delivery all run
 without a stop, and the final report is the hand-off — a reviewed draft PR, never a question about
-whether to ship it. In a repo whose `.roadmap` says `verify: ready-for-review`, `/review-loop` ends
-by marking that PR ready so the repo's check runs on it; nothing ever merges it. The surface is the
-one the issues flow already measures for the start comment (`issues.md` §2), and each flow says
-where it runs that test. On a Mac the gate stays.
+whether to ship it. In a repo whose default branch's `.roadmap` says `verify: ready-for-review`, a
+cloud session's `/review-loop` ends by marking that PR ready so the repo's check runs on it; nothing
+ever merges it. The surface is the one the issues flow already measures for the start comment
+(`issues.md` §2), and each flow says where it runs that test. On a Mac the gate stays.
 
 If the user's opening message waives the second gate — "don't wait for me to test", "go all the way
 through", or equivalent — say so at the start and run straight through, in either flow. The reverse

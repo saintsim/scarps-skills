@@ -6,8 +6,9 @@ allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, mcp__github__issue_read,
 ---
 
 The last step of the loop, and the owner's to trigger: `/roadmap-item` ships a **draft** PR (marked
-ready after review, in a repo that opts in to a ready-for-review check) and leaves the issue open on purpose, because a PR body says `Refs #N` and never `Closes #N` — a merge
-must not write intent. Once the owner has merged it, this closes the item.
+ready after review, in a repo that opts in to a ready-for-review check) and leaves the issue open on
+purpose, because a PR body says `Refs #N` and never `Closes #N` — a merge must not write intent.
+Once the owner has merged it, this closes the item.
 
 **It is the one skill that closes an item as completed**, and it does so only when told to and only
 against a merge it has proved. `/roadmap-item` and `/roadmap-checkin` put `intent:now` on at
