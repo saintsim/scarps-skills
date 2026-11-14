@@ -89,11 +89,11 @@ verbatim; the heading line and the paragraph under the block are prose and are n
 
 **PRs open as drafts. A human merges.** Never merge, and never mark a PR ready unasked — with one
 exception: on a cloud session, in a repo whose default branch's `.roadmap` says
-`verify: ready-for-review`, `/review-loop` marks its PR ready after the clean verdict and the final push, so
-the repo's ready-for-review check runs on reviewed code, and a red check gets one fix before the PR
-goes back to draft. The rules live in `review-loop/SKILL.md` (*Ready for review*); `/ship` still
-opens drafts and watches nothing. A PR body says `Refs #N`, never `Closes` — a merge closing an
-issue is automation writing intent.
+`verify: ready-for-review`, `/review-loop` marks its PR ready after the clean verdict and the final
+push, so the repo's ready-for-review check runs on reviewed code, and a red check gets one fix
+before the PR goes back to draft. The rules live in `review-loop/SKILL.md` (*Ready for review*);
+`/ship` still opens drafts and watches nothing. A PR body says `Refs #N`, never `Closes` — a merge
+closing an issue is automation writing intent.
 
 **British English** in prose. Comment the *intent* — why this shape, not what the line does.
 

@@ -538,12 +538,13 @@ When the loop converges (or hits the safety cap), report:
 7. **Build/tests** — final status, and anything that could not be executed in this environment.
 8. **Pushed** — the commit per round, the final head, and the **PR URL**, saying whether the
    PR already existed or `/ship` opened it at the end (*When the loop ends*).
-9. **Ready for review** — skipped on a Mac, saying so; else the opt-in script's answer, and then one
-   of: left a draft (not opted in, an unrecognised `verify:` value, no default branch, or no
-   `ready_for_review` workflow); marked ready, with every run URL and the outcome — green; red and
-   fixed, green on the re-run; red and back to draft (not the code, or the one attempt spent); no
-   run started, back to draft; still running past the bound, left ready; or triggered but unreadable
-   — and the PR's final state; or could not be marked ready, and the owner was asked to tap it.
+9. **Ready for review** — skipped, saying why: a Mac, an environment §2 could not place, or the
+   surface could not be measured; else the opt-in script's answer, and then one of: left a draft
+   (not opted in, an unrecognised `verify:` value, no default branch, or no `ready_for_review`
+   workflow); marked ready, with every run URL and the outcome — green; red and fixed, green on the
+   re-run; red and back to draft (not the code, or the one attempt spent); no run started, back to
+   draft; still running past the bound, left ready; or triggered but unreadable — and the PR's final
+   state; or could not be marked ready, and the owner was asked to tap it.
 
 Do not claim "clean" unless Fable actually said so — report faithfully, including any deferrals or a
 hit safety cap.
