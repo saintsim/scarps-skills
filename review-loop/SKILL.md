@@ -41,8 +41,8 @@ say which PR you are reviewing. Three rules follow from the code being pushed:
   existed in a working tree is a fix nobody reviewed and nobody merged, and a session that dies
   mid-loop takes every unpushed round with it.
 - **Leave the PR a draft while the loop runs, and never merge it.** A clean verdict from the
-  reviewer is not a human's approval. **The one exception is a repo that opts in to a
-  ready-for-review check** (*Ready for review*, below): there, after the clean verdict and the
+  reviewer is not a human's approval. **The one exception is a cloud session in a repo that opts in
+  to a ready-for-review check** (*Ready for review*, below): there, after the clean verdict and the
   final push, the session marks the PR ready so the check runs on reviewed code, and reads the
   result. Everywhere else the PR stays a draft. No repo's opt-in ever permits a merge.
 - **If a push needs approval, the loop is not unattended any more.** Say so at the first round it
@@ -309,10 +309,13 @@ point: verifying a cloud session's work without the owner having to be there.
 **A cloud session only. On a Mac, leave the PR a draft and skip this section.** The runner stands in
 for the machine a cloud session lacks; a session on the owner's own Mac verifies there, with
 `/swift-verify` or the repo's own build and tests, as it always has (the owner's decision,
-2026-11-14, while saintsim/scarps-skills#29 was built). The test is the first rule of the surface measurement in
-`roadmap-item/issues.md` §2: `uname -s` is `Darwin` → a Mac, and nothing overrides it. Anything else
-— a claude.ai container, the phone app's session — goes on. If that file is to hand, take its
-answer; if not, `uname -s` alone decides.
+2026-11-14, while saintsim/scarps-skills#29 was built). **Go on only when the surface measurement in
+`roadmap-item/issues.md` §2 answers `surface: web`.** Anything else skips this section without a
+question, and report item 9 says why: `surface: local` is a Mac, and §2's *stop and ask* — an
+environment nothing has measured, such as CI or a devcontainer — is not a cloud session either. That
+file is a sibling skill's (`../roadmap-item/issues.md` beside this skill's directory) and may not be
+installed: then `uname -s` reading `Darwin` — §2's first rule, which nothing overrides — still
+skips, and anything else skips too, saying the surface could not be measured.
 
 **One rule holds the section together: a PR this skill leaves ready is reviewed, and its check
 has passed or is still running.** Every outcome below that would leave a ready PR unchecked or red

@@ -17,8 +17,8 @@
 set -uo pipefail
 
 repo=${1:-} sha=${2:-} since=${3:-}
-[[ $repo == */* && $sha =~ ^[0-9a-f]{7,40}$ && $since =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] ||
-  { echo "ERROR usage: watch-check.sh owner/repo <hex sha> <YYYY-MM-DDTHH:MM:SSZ>"; exit 4; }
+[[ $repo == */* && $sha =~ ^[0-9a-f]{40}$ && $since =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] ||
+  { echo "ERROR usage: watch-check.sh owner/repo <full 40-character sha> <YYYY-MM-DDTHH:MM:SSZ>"; exit 4; }
 command -v gh >/dev/null 2>&1 || { echo "ERROR gh is not installed"; exit 4; }
 
 interval=${WATCH_INTERVAL:-60}            # seconds between polls
@@ -54,7 +54,8 @@ while :; do
     if [ -z "$runs" ] && [ "$elapsed" -ge "$start_window" ]; then echo "NO_RUN"; exit 2; fi
   else
     failures=$((failures + 1))
-    last_err=$(head -n 1 "$errfile") runs=''
+    # The last line: gh prints its own notices before the error, not after.
+    last_err=$(tail -n 1 "$errfile") runs=''
     [ "$failures" -ge 5 ] && { echo "ERROR gh api failed five times running: $last_err"; exit 4; }
   fi
   if [ "$elapsed" -ge "$bound" ]; then

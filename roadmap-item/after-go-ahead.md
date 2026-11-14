@@ -139,7 +139,8 @@ All of this **from the worktree path**.
   the promoted `next` and why, any items the review deferred, and any evidence that could not be
   measured.
 - **Draft only.** Never `gh pr ready` on the roadmap PR, never `gh pr merge` on either. The code PR
-  is marked ready only by `/review-loop`, in an opted-in repo. A human merges both, in order.
+  is marked ready only by `/review-loop`, on a cloud session in an opted-in repo. A human merges
+  both, in order.
 
 If the code PR changes materially in review, revisit the roadmap PR before it merges.
 
@@ -147,8 +148,8 @@ If the code PR changes materially in review, revisit the roadmap PR before it me
 
 Report the item and what shipped; the code branch and **draft PR URL**; the verification actually
 run, with results; the review-loop verdict; on a run that skipped Gate 2, everything `markdown.md`
-§7 would have reported — above all **decisions and open points** and **how to try it** — since
-this report is the first time the owner sees the work; the Open-Road branch and **draft PR URL**;
-the item promoted to `next` and why; anything deferred or out of scope; and that **both PRs are
-drafts — the code PR marked ready instead where its repo opts in, with its check's result — and the
-code PR merges first**. If something didn't run, say it didn't run.
+§7 would have reported — above all **decisions and open points** and **how to try it** — since this
+report is the first time the owner sees the work; the Open-Road branch and **draft PR URL**; the
+item promoted to `next` and why; anything deferred or out of scope; and that **both PRs are drafts —
+the code PR marked ready instead on a cloud session where its repo opts in, with its check's result
+— and the code PR merges first**. If something didn't run, say it didn't run.

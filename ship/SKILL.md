@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Never runs a code review itself; it runs BEFORE /review-loop, so the reviewer reads a pushed draft PR, and hands straight on to /review-loop when that has not yet run over this change. Never watches CI — none runs on opening or on a push, and in a repo opted in to a ready-for-review check, that check is /review-loop's to mark ready and read. Never marks the PR ready for review itself and never merges — a human stays in the loop.
+description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Never runs a code review itself; it runs BEFORE /review-loop, so the reviewer reads a pushed draft PR, and hands straight on to /review-loop when that has not yet run over this change. Never watches CI — none runs on opening or on a push, and in a repo opted in to a ready-for-review check, that check is /review-loop's to mark ready and read, on a cloud session only. Never marks the PR ready for review itself and never merges — a human stays in the loop.
 user-invocable: true
 allowed-tools: Bash, Read, Grep, Glob, Edit, Skill, mcp__github__issue_read, mcp__github__add_issue_comment, mcp__github__create_pull_request, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
@@ -22,8 +22,8 @@ The steps below assume the `gh` CLI; in an environment without it (e.g. remote/c
 the same operations under the same rules with whatever GitHub tooling the environment provides.
 
 **Hard rules — the human stays in the loop:**
-- Open the PR as a **draft**. Never mark it ready for review here — in an opted-in repo
-  `/review-loop` does that after a clean verdict — and **never merge** it.
+- Open the PR as a **draft**. Never mark it ready for review here — on a cloud session in an
+  opted-in repo `/review-loop` does that after a clean verdict — and **never merge** it.
 - **Never create or enable git hooks**, and don't bypass existing ones.
 - Never operate in a **detached HEAD**. If `git branch --show-current` is empty, stop and tell the
   user.
@@ -202,7 +202,7 @@ gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"
 - If `gh` is missing or unauthenticated and no alternative GitHub tooling exists here, stop and tell
   the user to run `! gh auth login` (the `!` prefix runs it in-session), then re-run `/ship`.
 - **Do not** mark the PR ready for review — that is `/review-loop`'s, after a clean verdict, and
-  only in an opted-in repo — and **do not** merge it.
+  only on a cloud session in an opted-in repo — and **do not** merge it.
 
 **Then name the PR on the item**, when §7 resolved one. Post one short comment on the item's issue,
 in exactly this shape, with the PR's full URL and its title:
@@ -284,11 +284,11 @@ draft PR — never skip the review silently.
 
 Tell the user: the branch (and whether it was newly created); the commit subject; push status; the
 **draft PR URL**, noting it's a **draft awaiting review** — `/review-loop` marks it ready only in an
-opted-in repo, and the merge is always the owner's; the lint outcome (ran and passed / no linter
-found); the docs outcome (updated / already up to date); **which item the PR references**, or that
-it references none and why; the *Draft pull request* comment, one of: its URL (posted now), the URL
-of the earlier comment you found carrying this PR's URL, or that you printed it for the user to
-post; and what happened next — `/review-loop` run (with its verdict), already run, left to the
-calling skill, or not installed. Do not ask whether to watch the PR — nothing this skill did
-triggers a check — and do not ask whether to push or ship anything further: §9 has already settled
-what runs next.
+opted-in repo, on a cloud session, and the merge is always the owner's; the lint outcome (ran and
+passed / no linter found); the docs outcome (updated / already up to date); **which item the PR
+references**, or that it references none and why; the *Draft pull request* comment, one of: its URL
+(posted now), the URL of the earlier comment you found carrying this PR's URL, or that you printed
+it for the user to post; and what happened next — `/review-loop` run (with its verdict), already
+run, left to the calling skill, or not installed. Do not ask whether to watch the PR — nothing this
+skill did triggers a check — and do not ask whether to push or ship anything further: §9 has
+already settled what runs next.
