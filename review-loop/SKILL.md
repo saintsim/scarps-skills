@@ -2,7 +2,7 @@
 name: review-loop
 description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same sub-agent re-reviews; repeat until clean. Each round first merges in the latest default branch if the branch is behind. Then the reviewed code goes on a draft PR without asking — pushed to the PR it was reviewed on, or shipped with /ship when there was none — and, only on a cloud session in a repo whose `.roadmap` opts in with a `verify` line set to `ready-for-review`, the PR is marked ready so its check runs, and a red check gets one bounded fix. Where the PR's item is a roadmap issue, posts a `reviewed` stage comment on it at the pushed head. Never merges. Findings too big to fix now are recorded — as a `deferred`-labelled issue where the project's roadmap is issues, else in its deferred-review log — never silently ignored.
 user-invocable: true
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage, Skill, mcp__github__update_pull_request, mcp__github__pull_request_read, mcp__github__actions_list, mcp__github__get_job_logs, mcp__claude-code-remote__subscribe_pr_activity, mcp__claude-code-remote__unsubscribe_pr_activity, mcp__claude-code-remote__send_later, mcp__claude-code-remote__delete_trigger
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage, Skill, mcp__github__add_issue_comment, mcp__github__issue_read, mcp__github__list_pull_requests, mcp__github__update_pull_request, mcp__github__pull_request_read, mcp__github__actions_list, mcp__github__get_job_logs, mcp__claude-code-remote__subscribe_pr_activity, mcp__claude-code-remote__unsubscribe_pr_activity, mcp__claude-code-remote__send_later, mcp__claude-code-remote__delete_trigger
 ---
 
 You are running an **iterative, independent code-review loop**: a **Fable sub-agent is the
@@ -373,7 +373,7 @@ Fable returned CLEAN after three rounds; one finding deferred as #57.
 - **The paragraph** is prose and is not parsed: the verdict in words and anything deferred.
 - **Once per verdict on a pushed head, never per round, and never edited.** The comment is
   append-only and the latest wins. **A red check's fix (*A red check*) is a second verdict**: once
-  the reviewer has ruled on it and it is pushed, post another `reviewed` stage at the new head —
+  the reviewer has ruled on it and it is pushed, post another `reviewed` stage at the new head, its `round` counting the fix's round (N+1) —
   `clean` when it passed, `findings` when the reviewer returned `NEEDS_WORK` and the unreviewed fix
   stays pushed — so the board does not read *changed since review* over code that was re-reviewed.
 
