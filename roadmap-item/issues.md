@@ -361,7 +361,10 @@ written below.
 on a **draft** PR, so the reviewer reads the same diff a human would, the evidence and the review
 both hang off something with a URL, and a session that dies mid-review leaves the code pushed rather
 than stranded in a working tree. The draft PR is the point — nothing is ready for review until the
-loop is clean, and nobody merges a draft.
+loop is clean, and nobody merges a draft. On a cloud session in a repo whose default branch's
+`.roadmap` says `verify: ready-for-review`, `/review-loop` marks the PR ready after the final push,
+so the repo's check runs on reviewed code; everywhere else, a Mac included, it stays a draft. Either
+way **nothing here merges**.
 
 1. **`/ship`** — re-lints, updates docs, commits, pushes and opens the **draft** PR. `/ship` §8
    owns the title (it mirrors the commit subject); do not impose one here, and never a hardcoded
@@ -396,9 +399,20 @@ loop is clean, and nobody merges a draft.
    nothing is lost if the session dies and the PR shows the loop converging. Do not run `/ship` a
    second time to do it: the PR exists, and a plain `git push` updates it. Anything the loop defers
    goes into the Delivered comment, not silently away. **Leave the PR a draft** — a clean verdict is
-   not a human's approval.
+   not a human's approval — **unless this is a cloud session (`surface: web`, §2) and the repo opts
+   in**: then `/review-loop`'s *Ready for review* section marks it ready after the clean verdict and
+   the final push, waits for the check within its bound, and gives a red check one fix. Let it
+   finish that before step 3, so the Delivered comment carries the check's result. The wait is
+   bounded — 60 minutes a run, and at most two runs — and on a cloud session it ends the turn:
+   **whatever wakes the session** (the watcher exiting, a check result, a scheduled check-in),
+   finish `/review-loop`'s outcome and carry on from step 3. A session that never wakes leaves the
+   PR's own state to tell the owner, which is why `/review-loop` never leaves a ready PR unchecked.
+   A cloud session's `/review-loop` may be a snapshot older than that section, so check its report
+   says what happened to the check: if it says nothing and left the PR a draft, say so in the report
+   and ask the owner to tap *Ready for review* — never skip it silently.
 3. **The Delivered comment** — what the roadmap PR used to carry, posted **after** the review's
-   fixes are pushed so the evidence describes the PR's final head. The body is not rewritten.
+   fixes — and any fix for a red check — are pushed, so the evidence describes the PR's final head.
+   The body is not rewritten.
 
    ```markdown
    <!-- sidebar:delivered -->
@@ -408,6 +422,13 @@ loop is clean, and nobody merges a draft.
 
    <the measured evidence and decisions; anything the review deferred>
    ```
+
+   **On a cloud session in an opted-in repo, the evidence says what happened to the PR's check**:
+   marked ready, with every run's URL and the outcome `/review-loop` reported — green; red, fixed
+   and green on the re-run; red and put back to draft; no run started; or still running when the
+   bound passed — and whether the PR ended ready or a draft. A repo that has not opted in says
+   nothing about it: the PR is a draft, as always. On a Mac in an opted-in repo, say in one line
+   that the check was skipped and the PR left a draft, because a Mac verifies locally.
 
    **The PR has a line of its own, straight under the heading**, with the full URL and the PR's
    title. It used to be the tail of the branch line, which made it the easiest thing on the
@@ -460,15 +481,17 @@ loop is clean, and nobody merges a draft.
 
 ## Final report
 
-The item and what shipped; the branch and **draft PR URL**; the verification actually run, with
-results; the review-loop verdict; on a run that skipped Gate 2, everything §8 would have reported
-— above all **decisions and open points** and **how to try it** — since this report is the first
-time the owner sees the work; the start and Delivered comment URLs; anything deferred or out of
-scope; and that **the PR is a draft and the issue stays open until the owner merges it and runs
-`/roadmap-done`**. Then
-**name the item you would pick up next and why** — one line, from open issues whose dependencies
-are all closed as completed — and say plainly that **the owner applies `intent:next` themselves**
-(one word to `/roadmap-edit`); this skill does not.
+The item and what shipped; the branch and **PR URL**; the verification actually run, with results;
+the review-loop verdict; on a cloud session in an opted-in repo, that the PR was **marked ready**
+and what its check reported (or that it could not be marked ready and the owner was asked to) — on a
+Mac, that the check was skipped and the PR left a draft; on a run that skipped Gate 2, everything §8
+would have reported — above all **decisions and open points** and **how to try it** — since this
+report is the first time the owner sees the work; the start and Delivered comment URLs; anything
+deferred or out of scope; and that **the PR is a draft — or marked ready, on a cloud session in an
+opted-in repo — and the issue stays open until the owner merges it and runs `/roadmap-done`**. Then
+**name the item you would pick up next and why** — one line, from open issues whose dependencies are
+all closed as completed — and say plainly that **the owner applies `intent:next` themselves** (one
+word to `/roadmap-edit`); this skill does not.
 
 ## Resuming a part-finished item
 

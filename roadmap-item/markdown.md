@@ -33,10 +33,10 @@ This flow posts no start comment, so it measures the surface itself — **run th
 `issues.md` §2** (this skill's own directory; the test's other home is `roadmap-checkin/SKILL.md`
 §3, and it is never copied here) and stop at its
 measurement, posting nothing. **`surface: web` → skip the gate**, and say at the start that the run
-goes straight through to reviewed draft PRs. **`surface: local` → keep it.** Where that test
-reaches its *stop and ask* rule, **keep the gate** instead: the stop at Gate 2 is itself the
-question, and a guess of `web` on a Mac would ship work the owner meant to try first. An opening
-message asking to stop for testing keeps it on the web too.
+goes straight through to reviewed draft PRs (the code PR marked ready where its repo opts in).
+**`surface: local` → keep it.** Where that test reaches its *stop and ask* rule, **keep the gate**
+instead: the stop at Gate 2 is itself the question, and a guess of `web` on a Mac would ship work
+the owner meant to try first. An opening message asking to stop for testing keeps it on the web too.
 
 ---
 

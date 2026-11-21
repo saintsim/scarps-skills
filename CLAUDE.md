@@ -51,8 +51,9 @@ the reviewer reads the diff that would merge.
 change on the machine that built it. On claude.ai or the phone app there is nothing local to try,
 and the owner reads the work on its PR once it is reviewed — so a cloud session skips the gate and
 hands over a reviewed draft PR, and `/review-loop` itself ends by putting the reviewed code on a
-draft PR (pushing, or running `/ship` when there is none) on every surface. **Neither ever asks
-whether to ship or push**: those questions have one answer, and asking only parks the session.
+draft PR (pushing, or running `/ship` when there is none) on every surface — then, on a cloud
+session in an opted-in repo, marking it ready (*Conventions*). **Neither ever asks whether to ship
+or push**: those questions have one answer, and asking only parks the session.
 
 ## The start comment is a contract shared with two other repos
 
@@ -73,11 +74,12 @@ verbatim; the heading line and the paragraph under the block are prose and are n
   instruction, including the ones that fail: no `gh`, no MCP tools, a label that does not exist, a
   sibling skill not installed. "Print the exact text and ask the user to post it" is the house
   fallback — never skip a write silently.
-- **Detect, never assume.** Where a skill must know what machine it is on, it measures and takes
-  the first matching rule in a stated order, and stops and asks where nothing matches rather than
+- **Detect, never assume.** Where a skill must know what machine it is on, it measures and takes the
+  first matching rule in a stated order, and stops and asks where nothing matches rather than
   inventing a value. **The test itself lives in `roadmap-item/issues.md` §2 and
   `roadmap-checkin/SKILL.md` §3, and only there** — it changes as the harness does, and a copy here
-  would be the one that rots.
+  would be the one that rots. `review-loop/SKILL.md` (*Ready for review*) points at §2 rather than
+  copying it, and carries only the Darwin line as its own fallback, since it ships alone.
 - **Examples get copied more reliably than rules get obeyed.** An example that contradicts the rule
   three paragraphs above it is a bug, not a typo. Keep worked examples consistent with the README.
 - **Say what was measured, and when.** A claim about an environment variable or a command's
@@ -85,8 +87,13 @@ verbatim; the heading line and the paragraph under the block are prose and are n
 
 ## Conventions
 
-**PRs open as drafts. A human merges.** Never mark ready or merge unasked. A PR body says `Refs #N`,
-never `Closes` — a merge closing an issue is automation writing intent.
+**PRs open as drafts. A human merges.** Never merge, and never mark a PR ready unasked — with one
+exception: on a cloud session, in a repo whose default branch's `.roadmap` says
+`verify: ready-for-review`, `/review-loop` marks its PR ready after the clean verdict and the final
+push, so the repo's ready-for-review check runs on reviewed code, and a red check gets one fix
+before the PR goes back to draft. The rules live in `review-loop/SKILL.md` (*Ready for review*);
+`/ship` still opens drafts and watches nothing. A PR body says `Refs #N`, never `Closes` — a merge
+closing an issue is automation writing intent.
 
 **British English** in prose. Comment the *intent* — why this shape, not what the line does.
 

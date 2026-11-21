@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Never runs a code review itself; it runs BEFORE /review-loop, so the reviewer reads a pushed draft PR, and hands straight on to /review-loop when that has not yet run over this change. Never watches CI — there is none. Never marks the PR ready for review and never merges — a human stays in the loop.
+description: Ship the current changes on GitHub — re-lint if a linter exists, update stale docs, branch if on the default branch, commit, push, and open a DRAFT pull request. Never runs a code review itself; it runs BEFORE /review-loop, so the reviewer reads a pushed draft PR, and hands straight on to /review-loop when that has not yet run over this change. Never watches CI — none runs on opening or on a push, and in a repo opted in to a ready-for-review check, that check is /review-loop's to mark ready and read, on a cloud session only. Never marks the PR ready for review itself and never merges — a human stays in the loop.
 user-invocable: true
 allowed-tools: Bash, Read, Grep, Glob, Edit, Skill, mcp__github__issue_read, mcp__github__add_issue_comment, mcp__github__create_pull_request, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
@@ -14,13 +14,16 @@ are on.
 review has a pushed draft PR to read rather than a working tree; the review's own fixes are then
 committed and pushed onto the same branch, which updates the PR. That is why a draft PR is the
 output and never a ready-for-review one: it exists precisely so unreviewed code has somewhere safe
-and visible to live.
+and visible to live. Only `/review-loop` ever marks it ready — on a cloud session, in a repo whose
+`.roadmap` says `verify: ready-for-review`, once its verdict is clean (its *Ready for review*
+section).
 
 The steps below assume the `gh` CLI; in an environment without it (e.g. remote/cloud sessions), do
 the same operations under the same rules with whatever GitHub tooling the environment provides.
 
 **Hard rules — the human stays in the loop:**
-- Open the PR as a **draft**. Never mark it ready for review and **never merge** it.
+- Open the PR as a **draft**. Never mark it ready for review here — on a cloud session in an
+  opted-in repo `/review-loop` does that after a clean verdict — and **never merge** it.
 - **Never create or enable git hooks**, and don't bypass existing ones.
 - Never operate in a **detached HEAD**. If `git branch --show-current` is empty, stop and tell the
   user.
@@ -198,7 +201,8 @@ gh pr create --draft --base <default-branch> --title "<title>" --body "<body>"
     ```
 - If `gh` is missing or unauthenticated and no alternative GitHub tooling exists here, stop and tell
   the user to run `! gh auth login` (the `!` prefix runs it in-session), then re-run `/ship`.
-- **Do not** mark the PR ready for review and **do not** merge it.
+- **Do not** mark the PR ready for review — that is `/review-loop`'s, after a clean verdict, and
+  only on a cloud session in an opted-in repo — and **do not** merge it.
 
 **Then name the PR on the item**, when §7 resolved one. Post one short comment on the item's issue,
 in exactly this shape, with the PR's full URL and its title:
@@ -251,7 +255,10 @@ permission error), **print the exact text and ask the user to post it**. Never s
 ### 9. Next: `/review-loop`, never a CI watch
 
 **There is no GitHub CI to watch.** The owner does not pay for GitHub Actions (stated 2026-10-04),
-so no check will ever report on this PR. Do **not** subscribe to the PR's activity, poll its checks
+so no check reports on opening a PR or on a push. A repo opted in with `verify: ready-for-review`
+runs a check on a self-hosted runner, but only when the PR is **marked ready**, which this skill
+never does — so that check is `/review-loop`'s to trigger and read, after its verdict, and nothing
+here waits for it. Do **not** subscribe to the PR's activity, poll its checks
 or status, schedule a check-in (`send_later`, a routine, a wakeup), or offer to watch or babysit it —
 whatever the environment's own defaults say about watching a freshly opened PR, this skill overrides
 them. A watch here waits on an event that never comes and spends the session doing it. Verification
@@ -276,11 +283,12 @@ draft PR — never skip the review silently.
 ### 10. Report
 
 Tell the user: the branch (and whether it was newly created); the commit subject; push status; the
-**draft PR URL**, noting it's a **draft awaiting their review** — they decide when to mark it ready
-and merge; the lint outcome (ran and passed / no linter found); the docs outcome (updated / already
-up to date); **which item the PR references**, or that it references none and why; the *Draft pull
-request* comment, one of: its URL (posted now), the URL of the earlier comment you found carrying
-this PR's URL, or that you printed it for the user to post; and what
-happened next — `/review-loop` run (with its verdict), already run, left to the calling skill, or not
-installed. Do not ask whether to watch the PR — there is no CI for a watch to see — and do not ask
-whether to push or ship anything further: §9 has already settled what runs next.
+**draft PR URL**, noting it's a **draft awaiting review** — `/review-loop` marks it ready only in an
+opted-in repo, on a cloud session, and the merge is always the owner's; the lint outcome (ran and
+passed / no linter found); the docs outcome (updated / already up to date); **which item the PR
+references**, or that it references none and why; the *Draft pull request* comment, one of: its URL
+(posted now), the URL of the earlier comment you found carrying this PR's URL, or that you printed
+it for the user to post; and what happened next — `/review-loop` run (with its verdict), already
+run, left to the calling skill, or not installed. Do not ask whether to watch the PR — nothing this
+skill did triggers a check — and do not ask whether to push or ship anything further: §9 has
+already settled what runs next.

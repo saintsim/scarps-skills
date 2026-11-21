@@ -22,10 +22,13 @@ that dies mid-review leaves the work pushed instead of stranded.
    shortcut the loop. Scope it at the PR's diff and give it the PR URL. **Each round's fixes are
    committed and pushed as that round ends**, never saved up for the end — a plain push on the same
    branch, never a second `/ship` run, which would try to open a second PR — and the PR stays a
-   **draft**. Anything it defers belongs in this project's
-   deferred log in Open-Road, not in the code repo — but **don't let it open a second roadmap PR**:
-   have it report the entries rather than pushing them itself, and write them onto the roadmap
-   branch in §9, which is already opening a PR against Open-Road for this item.
+   **draft**, unless this is a cloud session and the code repo's default branch says
+   `verify: ready-for-review` in its `.roadmap`: then `/review-loop` marks the code PR ready after
+   its clean verdict and reads the check (its *Ready for review* section), and the result goes in
+   the roadmap PR's body. Anything it defers belongs in this project's deferred log in Open-Road,
+   not in the code repo — but **don't let it open a second roadmap PR**: have it report the entries
+   rather than pushing them itself, and write them onto the roadmap branch in §9, which is already
+   opening a PR against Open-Road for this item.
 3. **The Open-Road change** — §9. Not optional: an item without its roadmap PR is unfinished.
 
 ## 9. The Open-Road change
@@ -135,7 +138,9 @@ All of this **from the worktree path**.
 - The body must **say plainly that it depends on the code PR and merges after it**, and link it; state
   the promoted `next` and why, any items the review deferred, and any evidence that could not be
   measured.
-- **Draft only.** Never `gh pr ready`, never `gh pr merge`. A human merges both, in order.
+- **Draft only.** Never `gh pr ready` on the roadmap PR, never `gh pr merge` on either. The code PR
+  is marked ready only by `/review-loop`, on a cloud session in an opted-in repo. A human merges
+  both, in order.
 
 If the code PR changes materially in review, revisit the roadmap PR before it merges.
 
@@ -143,7 +148,8 @@ If the code PR changes materially in review, revisit the roadmap PR before it me
 
 Report the item and what shipped; the code branch and **draft PR URL**; the verification actually
 run, with results; the review-loop verdict; on a run that skipped Gate 2, everything `markdown.md`
-§7 would have reported — above all **decisions and open points** and **how to try it** — since
-this report is the first time the owner sees the work; the Open-Road branch and **draft PR URL**;
-the item promoted to `next` and why; anything deferred or out of scope; and that **both PRs are
-drafts, and the code PR merges first**. If something didn't run, say it didn't run.
+§7 would have reported — above all **decisions and open points** and **how to try it** — since this
+report is the first time the owner sees the work; the Open-Road branch and **draft PR URL**; the
+item promoted to `next` and why; anything deferred or out of scope; and that **both PRs are drafts —
+the code PR marked ready instead on a cloud session where its repo opts in, with its check's result
+— and the code PR merges first**. If something didn't run, say it didn't run.
