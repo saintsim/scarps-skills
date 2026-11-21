@@ -1,6 +1,6 @@
 ---
 name: roadmap-checkin
-description: Announce that this session has a roadmap item in hand — post its start comment, add `in-progress`, set `intent:now` — for work ALREADY under way that was never announced: a pick-up that predates the move to GitHub Issues, one made by hand, one raised by `/roadmap-new` for work already going on, or one pulled down from the web with `claude --teleport` so the board still names claude.ai as the machine. Use when the user says "check in", "mark this as started", "post the start comment", "I teleported this", or asks why the board does not show this work as in hand, or shows it on the wrong machine. Never writes `next`, `later` or `idea`, and never closes an issue.
+description: Announce that this session has a roadmap item in hand — post its start comment, add `in-progress`, set `intent:now` — for work ALREADY under way that was never announced: a pick-up that predates the move to GitHub Issues, one made by hand, one raised by `/roadmap-new` for work already going on, or one pulled down from the web with `claude --teleport` so the board still names claude.ai as the machine. Use when the user says "check in", "mark this as started", "post the start comment", "I teleported this", or asks why the board does not show this work as in hand, or shows it on the wrong machine. Afterwards, only on the owner's own words that they tested it, records their `verified` stage comment. Never writes `next`, `later` or `idea`, and never closes an issue.
 user-invocable: true
 allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, mcp__github__issue_read, mcp__github__issue_write, mcp__github__list_issues, mcp__github__search_issues, mcp__github__add_issue_comment, mcp__github__list_pull_requests, mcp__github__search_pull_requests
 ---
@@ -206,6 +206,37 @@ that exists — and it is what keeps the other three the owner's: **never write 
 what has **not** started, which is the opposite of what this skill knows.
 
 An item already carrying `intent:now` needs no change; say so rather than claiming an edit.
+
+## 4. Afterwards — the owner's verdict, only on their words
+
+A checked-in session is often one the owner teleported to a Mac **to test**. If the owner then says,
+in their own words, that they tested it and it is good — or reports a problem — record it on the
+item as a `<!-- sidebar:stage -->` comment, so the board stops reading *awaiting your verification*.
+The shape is saintsim/Sidebar's `docs/item-flow.md`; keep the marker, fence and keys **verbatim**:
+
+````markdown
+<!-- sidebar:stage -->
+**Verified** · by the owner · clean
+
+```yaml
+stage: verified
+verdict: clean
+by: owner
+sha: 4f2a9c1
+branch: 41-issues-roadmap
+session: 9f2c1e04-7a3b-4d51-8c6e-2b0f4a7d9e13
+```
+
+The owner tested it on the Mac and said it is good.
+````
+
+- **`sha`** is the commit they tested — `git rev-parse --short HEAD` at the time, and ask if you
+  cannot tell. **`verdict: failed`** (and **Verified** · by the owner · failed) for a reported
+  problem. `session` is the start comment's from §3, and is left out if §3 could not establish one.
+- **Never without those words.** Not a green build, a passing `/swift-verify`, a clean review or a
+  silence: verification is the owner's, like intent. This skill posts no other stage.
+- Post it with `add_issue_comment`, else `gh api repos/<owner>/<repo>/issues/<N>/comments -F
+  body=@<file>`; if nothing can post it, **print the exact comment and ask the user to post it**.
 
 ## Report
 

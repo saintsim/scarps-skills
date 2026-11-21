@@ -1,8 +1,8 @@
 ---
 name: review-loop
-description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same sub-agent re-reviews; repeat until clean. Each round first merges in the latest default branch if the branch is behind. Then the reviewed code goes on a draft PR without asking — pushed to the PR it was reviewed on, or shipped with /ship when there was none — and, only on a cloud session in a repo whose `.roadmap` opts in with a `verify` line set to `ready-for-review`, the PR is marked ready so its check runs, and a red check gets one bounded fix. Never merges. Findings too big to fix now are recorded — as a `deferred`-labelled issue where the project's roadmap is issues, else in its deferred-review log — never silently ignored.
+description: Loop an independent Fable sub-agent code review and fix cycle until Fable judges the changes clean and good to ship. Fable reviews only; you fix every finding; the same sub-agent re-reviews; repeat until clean. Each round first merges in the latest default branch if the branch is behind. Then the reviewed code goes on a draft PR without asking — pushed to the PR it was reviewed on, or shipped with /ship when there was none — and, only on a cloud session in a repo whose `.roadmap` opts in with a `verify` line set to `ready-for-review`, the PR is marked ready so its check runs, and a red check gets one bounded fix. Where the PR's item is a roadmap issue, posts a `reviewed` stage comment on it at the pushed head. Never merges. Findings too big to fix now are recorded — as a `deferred`-labelled issue where the project's roadmap is issues, else in its deferred-review log — never silently ignored.
 user-invocable: true
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage, Skill, mcp__github__update_pull_request, mcp__github__pull_request_read, mcp__github__actions_list, mcp__github__get_job_logs, mcp__claude-code-remote__subscribe_pr_activity, mcp__claude-code-remote__unsubscribe_pr_activity, mcp__claude-code-remote__send_later, mcp__claude-code-remote__delete_trigger
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash, Agent, SendMessage, Skill, mcp__github__add_issue_comment, mcp__github__issue_read, mcp__github__list_pull_requests, mcp__github__update_pull_request, mcp__github__pull_request_read, mcp__github__actions_list, mcp__github__get_job_logs, mcp__claude-code-remote__subscribe_pr_activity, mcp__claude-code-remote__unsubscribe_pr_activity, mcp__claude-code-remote__send_later, mcp__claude-code-remote__delete_trigger
 ---
 
 You are running an **iterative, independent code-review loop**: a **Fable sub-agent is the
@@ -295,8 +295,117 @@ question — never ask whether to ship.
 rounds already committed, if the change is on a PR, and report the state. Nor does it mark
 anything ready (*Ready for review*).
 
-Then, once the reviewed code is on the PR, **check for the opt-in below**. In a repo that has not
-opted in, the loop is over and the PR stays a draft.
+Then, once the reviewed code is on the PR, **post the stage comment** (next section) and **check
+for the opt-in below**. In a repo that has not opted in, the loop is over and the PR stays a draft.
+
+## The stage comment — once per verdict on a pushed head
+
+Where the PR belongs to an item on a **repo whose roadmap is its own issues**, the loop's outcome
+goes on the item as a `<!-- sidebar:stage -->` comment, so a board such as Sidebar or SidePocket
+can tell *reviewed clean, awaiting your verification* from *still being built*. This holds whether
+`/roadmap-item` called you or the owner ran you by hand — the board cannot tell the difference,
+and should not have to.
+
+**First, the reviewed code must be a commit on an open PR.** All three of these, or post nothing:
+
+- an **open PR** has this branch as its head (`pull_request_read` / `list_pull_requests` with
+  `head`, or REST: `gh api 'repos/<owner>/<repo>/pulls?state=open&head=<owner>:<branch>'` —
+  `gh pr list` goes through GraphQL, refused like `gh issue view` in step 4 below);
+- `git status --porcelain` is **empty** — reviewed edits left uncommitted mean what was reviewed
+  is *HEAD plus edits*, which no SHA names;
+- `git rev-parse HEAD` equals `git rev-parse @{u}` — and an `@{u}` that errors (no upstream)
+  counts as unpushed.
+
+Any of them failing → say which in the final report, post nothing, and print the comment you would
+have posted so the owner can post it once the code is on the PR.
+
+**Then resolve the item, in this order, and post nothing where it does not resolve:**
+
+1. **The PR body's `Refs`.** `Refs <owner>/<repo>#N` names that repo's issue, whatever this repo's
+   `.roadmap` says — an item can live in another repo. A bare `Refs #N` names this repo's issue,
+   and only where this repo's `.roadmap` says `kind: github-issues`. Two or more different items
+   named → say so and post nothing; never pick one.
+2. **No `Refs` in the body → the branch**, and only where `.roadmap` says `kind: github-issues`:
+   `41-issues-roadmap` → #41; `rm-NN-*` → the issue whose title starts `RM-NN —`.
+3. **The branch's number and a bare `Refs #N` disagree** (a `41-…` branch whose PR says
+   `Refs #58`) → the branch and the work have come apart; say so and post nothing.
+4. **The issue carries the `roadmap` label.** Read it with `issue_read` (`get_labels`), else
+   `gh api repos/<owner>/<repo>/issues/<N> --jq '.labels[].name'` — the REST form, since
+   `gh issue view` goes through GraphQL and is refused on some cloud sessions (403, measured
+   2026-11-21). An unlabelled issue is not an item → post nothing. Labels that cannot be read →
+   post nothing and print the comment for the owner.
+
+No `.roadmap` with `kind: github-issues` and no long-form `Refs` → there is no issue roadmap; say so
+in the final report and post nothing.
+
+Then post one comment. Keep the marker, the yaml fence and the key names **verbatim** — the shape
+is saintsim/Sidebar's `docs/item-flow.md`, parsed by its `sidebar/issues.py`, and copied by the
+phone; a key spelt differently here is a stage that silently never shows:
+
+````markdown
+<!-- sidebar:stage -->
+**Reviewed** · round 3 · clean
+
+```yaml
+stage: reviewed
+verdict: clean
+round: 3
+sha: 4f2a9c1
+branch: 41-issues-roadmap
+session: https://claude.ai/code/session_017wSwKg7FYMenuCMUTo5Grw
+```
+
+Fable returned CLEAN after three rounds; one finding deferred as #57.
+````
+
+- **`verdict`** — `clean` for `CLEAN` or `CLEAN_AFTER_NITS` (the parser drops
+  `CLEAN_AFTER_NITS` itself); `findings` when the loop stopped at the safety cap or on oscillation
+  with findings still open, once the committed rounds are pushed. This skill never writes
+  `failed`: a round whose checks fail is never committed, so no pushed head carries it — the gate
+  above posts nothing and the report says why.
+- **`round`** — the number of review rounds run, the nit-fixing finish not counted as one.
+- **`sha`** — `git rev-parse --short HEAD`, the pushed head the verdict describes. Required: it is
+  what lets the next push retire the stage as *changed since review*.
+- **`branch`** — the PR's head branch. **`session`** — the `session:` of a start comment this
+  session posted on the item, if there is one; else the claude.ai session URL your system prompt
+  names; else leave the key out. Not `CLAUDE_CODE_SESSION_ID`: it is set on cloud sessions too and
+  identifies nothing on its own. The key is optional, and a wrong value is worse than none.
+- **The paragraph** is prose and is not parsed: the verdict in words and anything deferred.
+- **Once per verdict on a pushed head, never per round, and never edited.** The comment is
+  append-only and the latest wins. **A red check's fix (*A red check*) is a second verdict**: once
+  the reviewer has ruled on it and it is pushed, post another `reviewed` stage at the new head, its `round` counting the fix's round (N+1) —
+  `clean` when it passed, `findings` when the reviewer returned `NEEDS_WORK` and the unreviewed fix
+  stays pushed — so the board does not read *changed since review* over code that was re-reviewed.
+
+**A clean review is not a verification, and neither is a green check** — the check is the repo's,
+the verification the owner's. They open *awaiting your verification* on the board, and only the
+owner closes it: say in the final report that the item is waiting for the owner to test the PR's
+head. **If the owner then says, in their own words, that they tested this head and it is good**,
+post the owner's stage on the same item — and only then; never on your own reading of a review,
+a check or a silence:
+
+````markdown
+<!-- sidebar:stage -->
+**Verified** · by the owner · clean
+
+```yaml
+stage: verified
+verdict: clean
+by: owner
+sha: 4f2a9c1
+branch: 41-issues-roadmap
+```
+
+The owner tested the PR's head and said it is good.
+````
+
+`sha` is the head they tested — ask if it has moved since your `reviewed` stage. A reported problem
+is the same shape with `verdict: failed` and **Verified** · by the owner · failed.
+
+**Access**, for every comment here: the `mcp__github__*` tools if you have them
+(`add_issue_comment`), else `gh api repos/<owner>/<repo>/issues/<N>/comments -F body=@<file>` (REST,
+for the reason in step 4). If neither works, **print the exact comment and ask the user to post
+it** — never skip it silently.
 
 ## Ready for review — only where the repo opts in to a check
 
@@ -461,6 +570,8 @@ or `gh api repos/<owner>/<repo>/actions/runs/<run-id>/jobs` for the failed step 
     to draft, then mark ready again and wait once more, both exactly as above, with a fresh note of
     the time and head and a fresh 60-minute bound.
   - **`NEEDS_WORK`** → the attempt is spent.
+
+  Either way, post the second `reviewed` stage at the fix's head (*The stage comment*).
 - **The attempt is spent** — the reviewer would not pass the fix, or the re-run comes back
   `FAILURE`, `NO_RUN` or `ERROR` → **put the PR back to draft** and report: every run's URL, the
   failure in the log's own words, what the fix tried, and, if the reviewer did not pass it, that the
@@ -550,6 +661,9 @@ When the loop converges (or hits the safety cap), report:
    re-run; red and back to draft (not the code, or the one attempt spent); no run started, back to
    draft; still running past the bound, left ready; or triggered but unreadable — and the PR's final
    state; or could not be marked ready, and the owner was asked to tap it.
+10. **Stage** — each `reviewed` stage comment's URL and verdict, or why none was posted (not on an
+    open PR, uncommitted or unpushed, no issue roadmap, no item or several resolved, a branch and
+    `Refs` that disagree, an unlabelled issue, or labels that could not be read).
 
 Do not claim "clean" unless Fable actually said so — report faithfully, including any deferrals or a
 hit safety cap.
