@@ -350,6 +350,72 @@ Do **not** run `/ship` or `/review-loop` yet — the evidence must describe the 
 the user reports a problem, fix it on the same branch, re-verify, and hand back again — the gate
 repeats; the skill does not restart.
 
+**Post a `testing` stage comment as you stop**, after the commit, so the board reads *awaiting your
+verification — before PR* instead of drawing the item as though it were still being built. The
+shape is saintsim/Sidebar's `docs/item-flow.md`, which is the authority (its parser is
+`sidebar/issues.py`); keep the marker, the yaml fence and the keys **verbatim**:
+
+````markdown
+<!-- sidebar:stage -->
+**Testing** · Gate 2 · handed back to the owner
+
+```yaml
+stage: testing
+sha: 4f2a9c1
+branch: 41-issues-roadmap
+session: 9f2c1e04-7a3b-4d51-8c6e-2b0f4a7d9e13
+```
+
+Built and committed; waiting for the owner to try it.
+````
+
+- **`sha` is required** — `git rev-parse --short HEAD`, the commit you are handing back. It is what
+  lets a later push retire the stage (*changed since testing*), so no session ever has to post
+  *back to building*. A `testing` stage carries **no `verdict`**: it is the hand-back, not a
+  judgement.
+- **`branch`** is the branch you just committed on; **`session`** is the same value as this
+  pick-up's start comment (§2). Both are optional to the parser, but a stage you can trace back to
+  its session is worth the line.
+- **Every hand-back posts its own** — the second after a reported problem as well as the first. One
+  comment per stage, append-only; **never edit an earlier one**, since the latest wins.
+- **A skipped Gate 2 posts nothing** — a cloud session, or a waiver. Nobody is being handed
+  anything, so there is no `testing` to claim, and no owner verdict either (below).
+- Access and fallback as for the start comment: the `mcp__github__*` tools, else `gh issue comment
+  <N> --body-file <file>`, else **print the exact comment and ask the user to post it** — never skip
+  it silently.
+
+**The owner's verdict is a stage too, and only the owner's words write it.** When the owner says
+they have tested it and it is good — the go-ahead that ends Gate 2, or the same words later in this
+session or any other session on the item — post `stage: verified`, `verdict: clean`, `by: owner`,
+at **the commit they tested**: the `sha` of the latest `testing` stage, or of the clean review's
+`reviewed` stage when they are verifying the PR after review. When they report a problem instead,
+post the same shape with `verdict: failed` before you start fixing — that is what turns the board
+to *needs work*.
+
+````markdown
+<!-- sidebar:stage -->
+**Verified** · by the owner · clean
+
+```yaml
+stage: verified
+verdict: clean
+by: owner
+sha: 4f2a9c1
+branch: 41-issues-roadmap
+session: 9f2c1e04-7a3b-4d51-8c6e-2b0f4a7d9e13
+```
+
+The owner tested it at Gate 2 and gave the go-ahead.
+````
+
+**Never post `by: owner` without those words.** Verification is the owner's, like intent: not a
+green build, not a clean review, not a skipped gate, and not silence after a hand-back. The go-ahead
+at Gate 2 counts because the gate asked them to test; one that says outright they did not
+("haven't tried it, ship it anyway") is a go-ahead and not a verification, so §9 runs and no
+`verified` is posted. Nor does a bare `/ship` or "ship it" typed on a session whose Gate 2 never ran.
+If you cannot tell which commit they tested — the head has moved since the last `testing` or
+`reviewed` stage — ask rather than naming one.
+
 ## 9. On the go-ahead — ship, review, deliver
 
 Reached on the owner's go-ahead at Gate 2, or straight from §8's commit when the gate was skipped
@@ -365,6 +431,10 @@ loop is clean, and nobody merges a draft. On a cloud session in a repo whose def
 `.roadmap` says `verify: ready-for-review`, `/review-loop` marks the PR ready after the final push,
 so the repo's check runs on reviewed code; everywhere else, a Mac included, it stays a draft. Either
 way **nothing here merges**.
+
+**Arrived by the go-ahead at Gate 2? Post the owner's `verified` stage first** (§8), at the
+`testing` stage's `sha` — the go-ahead is the owner saying the commit they tried is good. A skipped
+gate has nothing to verify, and posts none.
 
 1. **`/ship`** — re-lints, updates docs, commits, pushes and opens the **draft** PR. `/ship` §8
    owns the title (it mirrors the commit subject); do not impose one here, and never a hardcoded
@@ -398,7 +468,11 @@ way **nothing here merges**.
    pushed as that round ends**, once the repo's lint and tests pass — not saved up for the end — so
    nothing is lost if the session dies and the PR shows the loop converging. Do not run `/ship` a
    second time to do it: the PR exists, and a plain `git push` updates it. Anything the loop defers
-   goes into the Delivered comment, not silently away. **Leave the PR a draft** — a clean verdict is
+   goes into the Delivered comment, not silently away. `/review-loop` posts its own **`reviewed`
+   stage comment** on the issue once the reviewed code is pushed — do not post a second one from
+   here; if its report says it could not post, print the comment it gave and ask the user to post
+   it. A clean review opens *awaiting your verification — after review*, which only the owner's own
+   words close (§8). **Leave the PR a draft** — a clean verdict is
    not a human's approval — **unless this is a cloud session (`surface: web`, §2) and the repo opts
    in**: then `/review-loop`'s *Ready for review* section marks it ready after the clean verdict and
    the final push, waits for the check within its bound, and gives a red check one fix. Let it
@@ -486,7 +560,9 @@ the review-loop verdict; on a cloud session in an opted-in repo, that the PR was
 and what its check reported (or that it could not be marked ready and the owner was asked to) — on a
 Mac, that the check was skipped and the PR left a draft; on a run that skipped Gate 2, everything §8
 would have reported — above all **decisions and open points** and **how to try it** — since this
-report is the first time the owner sees the work; the start and Delivered comment URLs; anything
+report is the first time the owner sees the work; the start, stage and Delivered comment URLs, and
+— after a clean review — that the item reads *awaiting your verification* until the owner says they
+have tested the PR's head; anything
 deferred or out of scope; and that **the PR is a draft — or marked ready, on a cloud session in an
 opted-in repo — and the issue stays open until the owner merges it and runs `/roadmap-done`**. Then
 **name the item you would pick up next and why** — one line, from open issues whose dependencies are

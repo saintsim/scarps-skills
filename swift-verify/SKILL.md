@@ -1,6 +1,6 @@
 ---
 name: swift-verify
-description: Verify a Swift/Xcode project locally — SwiftLint, build, build-for-testing, then the unit (non-UI) tests, fixing failures and re-running until they pass. Use after /teleport from a web session, or any time the ask is "lint, build and get the tests green" on a Swift app. Needs Xcode and a simulator, so it runs on a Mac. Discovers the scheme, test targets and simulator at run time — nothing project-specific is hardcoded. Does not run the UI tests (that is /swift-verify-ui) and does not commit, push or launch the app.
+description: Verify a Swift/Xcode project locally — SwiftLint, build, build-for-testing, then the unit (non-UI) tests, fixing failures and re-running until they pass. Use after /teleport from a web session, or any time the ask is "lint, build and get the tests green" on a Swift app. Needs Xcode and a simulator, so it runs on a Mac. Discovers the scheme, test targets and simulator at run time — nothing project-specific is hardcoded. Does not run the UI tests (that is /swift-verify-ui) and does not commit, push or launch the app. On a repo whose roadmap is its own GitHub issues, posts a `verified` stage comment on the branch's item at the end of the run.
 user-invocable: true
 allowed-tools: Bash, Read, Grep, Glob, Edit, AskUserQuestion
 ---
@@ -22,7 +22,8 @@ runs on disk, **the disk wins** — and say so.
   you changed the test rather than the code, and why.
 - **Do not commit, push, or open a PR.** Verification is not shipping — `/ship` does that, when the
   user asks for it. Respect the repo's own git conventions (many say a local run leaves committing
-  to the developer).
+  to the developer). The one thing this skill writes to GitHub is the **stage comment** in step 6
+  — a record of the run on the item, never a change to the code.
 - **Do not launch the app**, and do not run the UI tests. `build`, `build-for-testing` and the unit
   suites only.
 - **Fix forward, minimally.** Repair what the failure needs. Don't refactor, don't tidy, don't widen
@@ -206,7 +207,67 @@ Write it **only when the ladder actually got that far**, and record honestly wha
 a state file claiming a pass that did not happen is worse than none, because the UI skill will trust
 it and skip the work.
 
-## 6. Report
+## 6. Post the stage on the item
+
+Where the repo's roadmap is its own GitHub issues, the run's outcome goes on the item as a
+`<!-- sidebar:stage -->` comment, so a board such as Sidebar or SidePocket can show the item as
+verified on the Mac — or as needing work — rather than still awaiting verification.
+
+**Resolve the item first, and post nothing where it does not resolve:**
+
+1. `.roadmap` at the repo root says `kind: github-issues`. No such line, or no `.roadmap` → say
+   "no issue roadmap — no stage posted" in the report and move on.
+2. The issue is the branch's leading number (`41-issues-roadmap` → #41); failing that, an
+   `rm-NN-*` branch's alias, the issue whose title starts `RM-NN —`; failing that, the first
+   `Refs #N` in the body of the open PR whose head is this branch
+   (`gh pr list --head <branch> --json body`). None, or several → say so and post nothing; never
+   guess.
+3. The issue carries the **`roadmap`** label; an unlabelled issue is not an item. Say so and post
+   nothing.
+4. **The tree this run verified is a commit.** `git status --porcelain` must be empty. A fix this
+   run made — or anything else uncommitted — means what went green is *HEAD plus edits*, which no
+   SHA names, and a `verified` claim at HEAD would vouch for code that was never built. Post
+   nothing, and say in the report that the stage waits for the owner to commit and re-run.
+5. **The run got far enough to judge.** A stop at preflight (no Xcode, a scheme nobody chose) has
+   verified nothing either way — post nothing.
+
+Then post one comment. Keep the marker, the yaml fence and the key names **verbatim** — the shape
+is saintsim/Sidebar's `docs/item-flow.md`, parsed by its `sidebar/issues.py`, and read on the
+phone; a key spelt differently is a stage that silently never shows:
+
+````markdown
+<!-- sidebar:stage -->
+**Verified** · swift-verify · clean
+
+```yaml
+stage: verified
+verdict: clean
+by: swift-verify
+sha: 4f2a9c1
+branch: 41-issues-roadmap
+session: 9f2c1e04-7a3b-4d51-8c6e-2b0f4a7d9e13
+```
+
+Lint clean; build, build-for-testing and 214 unit tests passed on iPhone 17 Pro (iOS 26.2).
+````
+
+- **`verdict`** — `clean` when every stage of the ladder passed; `failed` when anything is still
+  red at the end (a lint error, a build, or a unit test you stopped on). No other word: the parser
+  drops a `verified` stage with any other verdict, or none — and `findings` is a review's word.
+- **`by: swift-verify`**, always. **Never `by: owner`** — that is the owner's own verdict, written
+  only on their words, and a green ladder is not them saying they tried it.
+- **`sha`** — `git rev-parse --short HEAD`. Required: it is what lets a later push retire the stage
+  as *changed since verification*. It may be a commit not yet pushed; the board copes with that.
+- **`branch`** — `git branch --show-current`. **`session`** — `CLAUDE_CODE_SESSION_ID` if it is
+  set, else leave the key out. Both are optional, and a wrong value is worse than none.
+- **The paragraph** is prose and not parsed: what passed, the destination, anything still red.
+- One per run, append-only, never edited — the latest wins.
+
+**Access:** `gh issue comment <N> --body-file <file>` (or the `mcp__github__*` tools, where a session
+has them). If neither works, **print the exact comment and ask the user to post it** — never skip it
+silently.
+
+## 7. Report
 
 Tell the user, briefly:
 
@@ -217,6 +278,7 @@ Tell the user, briefly:
   (code was wrong / test was wrong).
 - **Anything still red**, plainly, up front.
 - **What changed on disk**, since the user will review and commit it themselves.
+- **Stage** — the stage comment's URL and verdict, or why none was posted.
 
 Then offer `/swift-verify-ui` if the project has UI targets — noting it will run only the UI suites,
 because this run is already recorded.

@@ -55,18 +55,37 @@ draft PR (pushing, or running `/ship` when there is none) on every surface — t
 session in an opted-in repo, marking it ready (*Conventions*). **Neither ever asks whether to ship
 or push**: those questions have one answer, and asking only parks the session.
 
-## The start comment is a contract shared with two other repos
+## The start, stage and Delivered comments are a contract shared with two other repos
 
-The shape a skill here writes is parsed elsewhere, and a change touches all three:
+The shapes a skill here writes are parsed elsewhere, and a change touches all three:
 
 | Where | Repo | Role |
 | --- | --- | --- |
-| `sidebar/issues.py` | [saintsim/Sidebar](https://github.com/saintsim/Sidebar) | **the authority** — the reference parser |
-| `roadmap-item/issues.md`, `roadmap-checkin/SKILL.md` | here | writes the comment |
-| `Parsing/`, `Model/Models.swift` | [saintsim/SidePocket](https://github.com/saintsim/SidePocket) | reads it on the phone |
+| `sidebar/issues.py`, `docs/item-flow.md` | [saintsim/Sidebar](https://github.com/saintsim/Sidebar) | **the authority** — the reference parser, and the stage and Delivered shapes written down to copy |
+| `roadmap-item/issues.md`, `roadmap-checkin/SKILL.md` | here | write the **start** comment (`<!-- sidebar:start -->`) |
+| `roadmap-item/issues.md`, `review-loop/SKILL.md`, `swift-verify/SKILL.md` | here | write the **stage** comment (`<!-- sidebar:stage -->`) |
+| `roadmap-item/issues.md` | here | writes the **Delivered** comment (`<!-- sidebar:delivered -->`) |
+| `Parsing/`, `Model/Models.swift` | [saintsim/SidePocket](https://github.com/saintsim/SidePocket) | reads them on the phone |
 
-**Never change the shape in one of them alone.** The marker, the yaml fence and the key names are
+**Never change a shape in one of them alone.** The marker, the yaml fence and the key names are
 verbatim; the heading line and the paragraph under the block are prose and are not parsed.
+
+**The stage comment says where an item is between pick-up and Delivered** — append-only, one per
+stage, the latest winning, and always carrying the `sha` it was measured at, so a later push retires
+it without anyone posting *back to building*. Its writers, each at the moment the stage is reached:
+
+| `stage` | Written by | When |
+| --- | --- | --- |
+| `testing` | `/roadmap-item` | Gate 2, as it hands back for the owner to test — so not on a cloud session, which skips the gate |
+| `reviewed` | `/review-loop` | once the reviewed code is on a PR whose item resolves — inside `/roadmap-item` or run by hand |
+| `verified`, `by: swift-verify` | `/swift-verify` | the end of a run, on a clean tree |
+| `verified`, `by: owner` | the session the owner tells | the owner saying they tested it and it is good (`clean`), or reporting a problem (`failed`) |
+
+**`by: owner` is written only on the owner's own words.** Verification is theirs, like intent — not
+a green build, a clean review, a skipped Gate 2, a green ready-for-review check or a passing
+`/swift-verify`. *Awaiting your verification* is never posted at all: the board derives it from the
+latest stage and its `sha`. Where a writer cannot resolve an issue, it says so in its report and
+posts nothing.
 
 ## Writing a skill
 
