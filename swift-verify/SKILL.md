@@ -215,20 +215,26 @@ verified on the Mac — or as needing work — rather than still awaiting verifi
 
 **Resolve the item first, and post nothing where it does not resolve:**
 
-1. `.roadmap` at the repo root says `kind: github-issues`. No such line, or no `.roadmap` → say
-   "no issue roadmap — no stage posted" in the report and move on.
-2. The issue is the branch's leading number (`41-issues-roadmap` → #41); failing that, an
-   `rm-NN-*` branch's alias, the issue whose title starts `RM-NN —`; failing that, the first
-   `Refs #N` in the body of the open PR whose head is this branch
-   (`gh pr list --head <branch> --json body`). None, or several → say so and post nothing; never
-   guess.
-3. The issue carries the **`roadmap`** label; an unlabelled issue is not an item. Say so and post
-   nothing.
-4. **The tree this run verified is a commit.** `git status --porcelain` must be empty. A fix this
+1. **The open PR's `Refs`**, when this branch has one
+   (`gh api 'repos/<owner>/<repo>/pulls?state=open&head=<owner>:<branch>' --jq '.[].body'`, the
+   REST form, since `gh pr list` goes through GraphQL and can be refused). `Refs <owner>/<repo>#N` names that
+   repo's issue, whatever this repo's `.roadmap` says — an item can live in another repo. A bare
+   `Refs #N` names this repo's issue, and only where this repo's `.roadmap` says
+   `kind: github-issues`. Two or more different items named → say so and post nothing.
+2. **No PR, or no `Refs` → the branch**, and only where `.roadmap` says `kind: github-issues`:
+   `41-issues-roadmap` → #41; `rm-NN-*` → the issue whose title starts `RM-NN —`. No such
+   `.roadmap` and no long-form `Refs` → say "no issue roadmap — no stage posted" in the report and
+   move on.
+3. **The branch's number and a bare `Refs #N` disagree** (a `41-…` branch whose PR says
+   `Refs #58`) → the branch and the work have come apart; say so and post nothing.
+4. **The issue carries the `roadmap` label** — `gh api repos/<owner>/<repo>/issues/<N> --jq
+   '.labels[].name'`, or `issue_read` (`get_labels`). An unlabelled issue is not an item; labels
+   that cannot be read → post nothing and print the comment for the owner.
+5. **The tree this run verified is a commit.** `git status --porcelain` must be empty. A fix this
    run made — or anything else uncommitted — means what went green is *HEAD plus edits*, which no
    SHA names, and a `verified` claim at HEAD would vouch for code that was never built. Post
    nothing, and say in the report that the stage waits for the owner to commit and re-run.
-5. **The run got far enough to judge.** A stop at preflight (no Xcode, a scheme nobody chose) has
+6. **The run got far enough to judge.** A stop at preflight (no Xcode, a scheme nobody chose) has
    verified nothing either way — post nothing.
 
 Then post one comment. Keep the marker, the yaml fence and the key names **verbatim** — the shape
@@ -258,13 +264,19 @@ Lint clean; build, build-for-testing and 214 unit tests passed on iPhone 17 Pro 
   only on their words, and a green ladder is not them saying they tried it.
 - **`sha`** — `git rev-parse --short HEAD`. Required: it is what lets a later push retire the stage
   as *changed since verification*. It may be a commit not yet pushed; the board copes with that.
-- **`branch`** — `git branch --show-current`. **`session`** — `CLAUDE_CODE_SESSION_ID` if it is
-  set, else leave the key out. Both are optional, and a wrong value is worse than none.
-- **The paragraph** is prose and not parsed: what passed, the destination, anything still red.
+- **`branch`** — `git branch --show-current`. **`session`** — the `session:` of a start comment
+  this session posted on the item, if there is one; else `CLAUDE_CODE_SESSION_ID`, which on the Mac
+  this skill needs is the local session's uuid; else leave the key out. Both are optional, and a
+  wrong value is worse than none.
+- **The paragraph** is prose and not parsed: what passed, the destination, anything still red —
+  and that the UI suites are **not** part of this verdict. When `/swift-verify-ui` invoked this run,
+  a later UI failure is not recorded on the item by this skill, so say in the report that the stage
+  covers the unit ladder only.
 - One per run, append-only, never edited — the latest wins.
 
-**Access:** `gh issue comment <N> --body-file <file>` (or the `mcp__github__*` tools, where a session
-has them). If neither works, **print the exact comment and ask the user to post it** — never skip it
+**Access:** `gh api repos/<owner>/<repo>/issues/<N>/comments -F body=@<file>` (REST, which a token
+reaches where `gh issue` commands can be refused), or the `mcp__github__*` tools, where a session
+has them. If neither works, **print the exact comment and ask the user to post it** — never skip it
 silently.
 
 ## 7. Report

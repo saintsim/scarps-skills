@@ -63,7 +63,7 @@ The shapes a skill here writes are parsed elsewhere, and a change touches all th
 | --- | --- | --- |
 | `sidebar/issues.py`, `docs/item-flow.md` | [saintsim/Sidebar](https://github.com/saintsim/Sidebar) | **the authority** — the reference parser, and the stage and Delivered shapes written down to copy |
 | `roadmap-item/issues.md`, `roadmap-checkin/SKILL.md` | here | write the **start** comment (`<!-- sidebar:start -->`) |
-| `roadmap-item/issues.md`, `review-loop/SKILL.md`, `swift-verify/SKILL.md` | here | write the **stage** comment (`<!-- sidebar:stage -->`) |
+| `roadmap-item/issues.md`, `review-loop/SKILL.md`, `swift-verify/SKILL.md`, `roadmap-checkin/SKILL.md` | here | write the **stage** comment (`<!-- sidebar:stage -->`) |
 | `roadmap-item/issues.md` | here | writes the **Delivered** comment (`<!-- sidebar:delivered -->`) |
 | `Parsing/`, `Model/Models.swift` | [saintsim/SidePocket](https://github.com/saintsim/SidePocket) | reads them on the phone |
 
@@ -76,10 +76,10 @@ it without anyone posting *back to building*. Its writers, each at the moment th
 
 | `stage` | Written by | When |
 | --- | --- | --- |
-| `testing` | `/roadmap-item` | Gate 2, as it hands back for the owner to test — so not on a cloud session, which skips the gate |
+| `testing` | `/roadmap-item` | Gate 2, as it hands back for the owner to test — only when the gate actually runs: a Mac, or a cloud session asked to stop |
 | `reviewed` | `/review-loop` | once the reviewed code is on a PR whose item resolves — inside `/roadmap-item` or run by hand |
 | `verified`, `by: swift-verify` | `/swift-verify` | the end of a run, on a clean tree |
-| `verified`, `by: owner` | the session the owner tells | the owner saying they tested it and it is good (`clean`), or reporting a problem (`failed`) |
+| `verified`, `by: owner` | the session the owner tells — `/roadmap-item`, `/review-loop` or `/roadmap-checkin` | the owner saying they tested it and it is good (`clean`), or reporting a problem (`failed`) |
 
 **`by: owner` is written only on the owner's own words.** Verification is theirs, like intent — not
 a green build, a clean review, a skipped Gate 2, a green ready-for-review check or a passing

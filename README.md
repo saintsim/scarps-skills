@@ -117,10 +117,10 @@ Fable returned CLEAN after three rounds.
 
 | `stage` | Written by | When |
 | --- | --- | --- |
-| `testing` | `roadmap-item` | Gate 2, as it hands back for you to test — so on a Mac, or when you asked to test |
+| `testing` | `roadmap-item` | Gate 2, as it hands back for you to test — only when the gate runs: a Mac, or a cloud session asked to stop |
 | `reviewed` | `review-loop` | once the reviewed code is on a PR whose item resolves — inside `roadmap-item` or run by hand |
 | `verified`, `by: swift-verify` | `swift-verify` | the end of a run, on a clean tree |
-| `verified`, `by: owner` | the session you tell | your saying you tested it and it is good (`clean`), or reporting a problem (`failed`) |
+| `verified`, `by: owner` | the session you tell — `roadmap-item`, `review-loop` or `roadmap-checkin` | your saying you tested it and it is good (`clean`), or reporting a problem (`failed`) |
 
 **`by: owner` is written only on your words** — the go-ahead at Gate 2, or "tested it, it's good"
 in any session on the item later. Verification is yours, like intent: a green build, a clean

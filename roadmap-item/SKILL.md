@@ -37,7 +37,9 @@ rather than anything read off the code, and the markdown flow writes no intent a
 neither ever writes `next`, `later` or `idea`, or closes an item. PRs open as **drafts**;
 British English. What differs is where the item lives and how completion is recorded (a paired
 Open-Road PR for markdown; a Delivered comment on the issue for issues, with the owner's
-`/roadmap-done` closing it once the PR has merged).
+`/roadmap-done` closing it once the PR has merged). On the issues flow the middle is recorded too, as
+`<!-- sidebar:stage -->` comments: `testing` at Gate 2, `reviewed` from `/review-loop`, and
+`verified`, `by: owner` only on the owner's own words that they tested it (`issues.md` §8).
 
 **Gate 2 is for a Mac.** It exists so the owner can try the change on the machine it was built on;
 a session on claude.ai or the Claude phone app has no local checkout for them to try, and the owner

@@ -173,8 +173,9 @@ and the keys **verbatim** — Sidebar parses them. `branch:` is omitted before t
 (`IssueParsing.swift` guards `surface` and a non-empty `session` strictly), so it would be no mark
 wearing the appearance of one. If the id cannot be established — the Mac uuid is not discoverable,
 or a cloud session carries no `CLAUDE_CODE_REMOTE_SESSION_ID` and the harness supplied no URL —
-post nothing, add the two labels, and say so. That applies to every comment written from this file,
-including a teleport's second one and any printed for the user to post by hand.
+post nothing, add the two labels, and say so. That applies to every **start** comment written from
+this file, including a teleport's second one and any printed for the user to post by hand. A stage
+comment (§8) is not a start: its `session` is optional, so it is posted without one.
 
 **The heading names the machine, not the author.** `claude.ai` for a web session, the hostname for
 a local one — the same words the board uses, so the comment reads the same on a phone and on the
@@ -375,14 +376,16 @@ Built and committed; waiting for the owner to try it.
   judgement.
 - **`branch`** is the branch you just committed on; **`session`** is the same value as this
   pick-up's start comment (§2). Both are optional to the parser, but a stage you can trace back to
-  its session is worth the line.
+  its session is worth the line. If §2 could not establish a session, leave `session` out — the
+  stage is still posted.
 - **Every hand-back posts its own** — the second after a reported problem as well as the first. One
   comment per stage, append-only; **never edit an earlier one**, since the latest wins.
-- **A skipped Gate 2 posts nothing** — a cloud session, or a waiver. Nobody is being handed
-  anything, so there is no `testing` to claim, and no owner verdict either (below).
-- Access and fallback as for the start comment: the `mcp__github__*` tools, else `gh issue comment
-  <N> --body-file <file>`, else **print the exact comment and ask the user to post it** — never skip
-  it silently.
+- **A skipped Gate 2 posts nothing** — a cloud session not asked to stop, or a waiver. Nobody is
+  being handed anything, so there is no `testing` to claim, and no owner verdict either (below).
+- Access and fallback as for the start comment: the `mcp__github__*` tools, else
+  `gh api repos/<owner>/<repo>/issues/<N>/comments -F body=@<file>` — REST, which a token reaches
+  where `gh issue` commands can be refused — else **print the exact comment and ask the user to post
+  it** — never skip it silently.
 
 **The owner's verdict is a stage too, and only the owner's words write it.** When the owner says
 they have tested it and it is good — the go-ahead that ends Gate 2, or the same words later in this
@@ -433,8 +436,8 @@ so the repo's check runs on reviewed code; everywhere else, a Mac included, it s
 way **nothing here merges**.
 
 **Arrived by the go-ahead at Gate 2? Post the owner's `verified` stage first** (§8), at the
-`testing` stage's `sha` — the go-ahead is the owner saying the commit they tried is good. A skipped
-gate has nothing to verify, and posts none.
+`testing` stage's `sha` — the go-ahead is the owner saying the commit they tried is good, unless
+they said they did not test it (§8). A skipped gate has nothing to verify, and posts none.
 
 1. **`/ship`** — re-lints, updates docs, commits, pushes and opens the **draft** PR. `/ship` §8
    owns the title (it mirrors the commit subject); do not impose one here, and never a hardcoded
@@ -577,6 +580,8 @@ Work out where it got to — `git log`, `git status`, `gh pr list --head <branch
 Gate 2, reviewed but unshipped, or shipped with the Delivered comment outstanding. **A resume is a
 pick-up: post a new start comment (§2) with `branch:` set and the paragraph stating the real state**,
 and make sure `in-progress` is on. Never edit the earlier comment. Past Gate 2, pick up at the
-matching step of §9 — and a resume on a cloud session that finds the item waiting at Gate 2 goes
+matching step of §9. **The issue's stage comments say where it got to** — the latest `testing`,
+`reviewed` or `verified`, and whether its `sha` is still the branch's head — so read them with the
+rest. A resume on a cloud session that finds the item waiting at Gate 2 goes
 on into §9 too, since that gate is not for the web (*Touch points*). Say in the report that the
 earlier session stopped for a local test that was never recorded as done.
